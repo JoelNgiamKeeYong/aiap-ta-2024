@@ -8,7 +8,7 @@ fi
 
 # Run the machine learning pipeline with configurable parameters
 echo "🚀 Running the machine learning pipeline... 🛠️"
-python src/pipeline.py --model random_forest --preprocess standard
+python src/pipeline.py
 
 # Check if the pipeline executed successfully
 if [ $? -eq 0 ]; then

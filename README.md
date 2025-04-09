@@ -25,6 +25,10 @@ Additional:
 - `run_download_data.sh`
 - `pipeline.ipynb`
 
+Each files is modular, so shall not name them _01_ etc.
+
+The eda.ipynb notebook imports utility functions from the helpers/eda_utils.py file to ensure reusability and modularity. This approach keeps the notebook clean and focused on presenting insights.
+
 ## 📋 Execution Instructions
 
 1. Place `noshow.db` in `data/`.

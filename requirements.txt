@@ -6,4 +6,5 @@ pandas
 requests
 seaborn
 scikit-learn
+squarify
 statsmodels
