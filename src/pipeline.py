@@ -1,12 +1,15 @@
-# pipeline.py
+# src/pipeline.py
 # This script orchestrates the entire pipeline for the project.
 
 import argparse
 from load_data import load_data 
+from clean_data import clean_data
 from preprocess_data import preprocess_data
 from train_model import train_and_evaluate  
 
+# Configurations
 db_path="data/noshow.db"
+table_name="noshow"
 
 def main():
     # Parse command-line arguments
@@ -15,10 +18,13 @@ def main():
     args = parser.parse_args()
 
     # Step 1: Load the dataset
-    data = load_data(db_path=db_path)
+    df = load_data(db_path, table_name)
 
     # Step 2: Preprocess the dataset, including cleaning and feature engineering
-    X, y = preprocess_data(data)
+    cleaned_df = clean_data(df)
+
+    # Step 2: Preprocess the dataset, including cleaning and feature engineering
+    # X, y = preprocess_data(data)
 
 
 
@@ -27,7 +33,7 @@ def main():
 
     # Train and evaluate the model
     print(f"🤖 Training and evaluating model ({args.model})...")
-    results = train_and_evaluate(X, y, model_type=args.model)  # Pass X and y separately
+    # results = train_and_evaluate(X, y, model_type=args.model)  # Pass X and y separately
     print("✅ Model training and evaluation completed!")
 
 if __name__ == "__main__":
