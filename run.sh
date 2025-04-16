@@ -20,7 +20,7 @@ if [ ! -f "$SAVE_PATH" ]; then
 
         echo "   └── Downloading from $DATA_URL..."
         if curl -o "$SAVE_PATH" "$DATA_URL" --fail --silent --show-error; then
-            echo "   └── Saved to $SAVE_PATH"
+            echo "   └── Saving to $SAVE_PATH..."
             echo "✅ Dataset downloaded successfully!"
             echo
         else
@@ -38,14 +38,13 @@ if [ ! -f "$SAVE_PATH" ]; then
 fi
 
 # Run the machine learning pipeline with configurable parameters
-echo "🚀 Running the machine learning pipeline..."
+echo "🚀🚀🚀 Running the machine learning pipeline..."
 echo
 python src/pipeline.py
 
 # Check if the pipeline executed successfully
 if [ $? -eq 0 ]; then
-    echo
-    echo "✅ Pipeline executed successfully!"
+    echo "🍻 Pipeline executed successfully!"
 else
     echo
     echo "❌ Error: Pipeline execution failed."
