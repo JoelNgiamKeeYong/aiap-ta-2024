@@ -5,6 +5,7 @@
 LOKY_MAX_CPU_COUNT: "4" # Maximum number of CPU cores to use for parallel processing. Adjust this value based on your system's available resources.
 
 # Database configurations
+data_url: "https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db" # URL to download the SQLite database file
 db_path: "data/noshow.db" # Path to the SQLite database file containing the dataset.
 db_table_name: "noshow" # Name of the table in the database that contains the data.
 

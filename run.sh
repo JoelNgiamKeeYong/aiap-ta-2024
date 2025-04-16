@@ -1,8 +1,23 @@
 #!/bin/bash
 
-# Dataset URL and save path
-DATA_URL="https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db"
-SAVE_PATH="data/noshow.db"
+# Path to the configuration file
+CONFIG_FILE="config.yaml"
+
+# Check if the configuration file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "❌ Error: Configuration file '$CONFIG_FILE' not found."
+    exit 1
+fi
+
+# Extract from the YAML file
+DATA_URL=$(grep '^data_url:' "$CONFIG_FILE" | awk '{print $2}' | sed 's/"//g')
+SAVE_PATH=$(grep '^db_path:' "$CONFIG_FILE" | awk '{print $2}' | sed 's/"//g')
+
+# Ensure the extracted paths are valid
+if [ -z "$DATA_URL" ] || [ -z "$SAVE_PATH" ]; then
+    echo "❌ Error: Failed to extract DATA_URL or SAVE_PATH from '$CONFIG_FILE'."
+    exit 1
+fi
 
 # Check if the dataset exists
 if [ ! -f "$SAVE_PATH" ]; then
