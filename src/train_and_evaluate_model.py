@@ -8,6 +8,7 @@ import seaborn as sns
 from tabulate import tabulate
 from sklearn.model_selection import GridSearchCV, learning_curve
 from sklearn.inspection import permutation_importance
+from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
     roc_curve,
     auc,
@@ -210,12 +211,14 @@ def evaluate_model(best_model, model_name, X_train, X_test, y_train, y_test, res
 
     # Compute and save confusion matrix
     try:
+        print(f"   └── Generating and plotting the confusion matrix...")
         cm = confusion_matrix(y_test, best_model.predict(X_test))
 
         # Normalize confusion matrix for visualization
         cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, None]
 
         # Save confusion matrix plot as PNG
+        
         os.makedirs("output/confusion_matrix", exist_ok=True)
         png_filename = f"output/confusion_matrix/confusion_matrix_{model_name.replace(' ', '_').lower()}.png"
         plt.figure(figsize=(8, 6))
@@ -226,14 +229,13 @@ def evaluate_model(best_model, model_name, X_train, X_test, y_train, y_test, res
         plt.tight_layout()
         plt.savefig(png_filename, dpi=300, bbox_inches='tight')
         plt.close()
-        print(f"   └── Generating and plotting the confusion matrix...")
-
+        
     except Exception as e:
         print(f"   ⚠️ Error occurred while computing or saving confusion matrix for {model_name}: {str(e)}")
     
     # Generate and save learning curves
     try:
-        print(f"   └── Generating learning curves for...")
+        print(f"   └── Generating and plotting learning curves...")
         train_sizes = np.linspace(0.1, 1.0, 10)  # Define training sizes
         train_sizes, train_scores, test_scores = learning_curve(
             best_model, X_train, y_train,
@@ -266,10 +268,37 @@ def evaluate_model(best_model, model_name, X_train, X_test, y_train, y_test, res
         learning_curve_file_path = f"output/learning_curves/learning_curve_{model_name.replace(' ', '_').lower()}.png"
         plt.savefig(learning_curve_file_path, dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"   └── Saved learning curves for {model_name} to {learning_curve_file_path}")
 
     except Exception as e:
         print(f"   ⚠️ Error generating learning curves for {model_name}: {str(e)}")
+
+    # Add Calibration Curve
+    try:
+        print(f"   └── Generating and plotting calibration curve...")
+        prob_pos = best_model.predict_proba(X_test)[:, 1]
+        fraction_of_positives, mean_predicted_value = calibration_curve(y_test, prob_pos, n_bins=10)
+
+        # Plot calibration curve
+        plt.figure(figsize=(8, 6))
+        plt.plot(mean_predicted_value, fraction_of_positives, "s-", label=f"{model_name}")
+        plt.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Perfectly calibrated")
+        plt.xlabel("Mean Predicted Probability", fontsize=12)
+        plt.ylabel("Fraction of Positives", fontsize=12)
+        plt.title(f"Calibration Curve - {model_name}", fontsize=14, fontweight="bold")
+        plt.legend(loc="upper left", fontsize=10)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.tight_layout()
+
+        # Save calibration curve plot
+        os.makedirs("output/calibration_curves", exist_ok=True)
+        calibration_curve_file_path = f"output/calibration_curves/calibration_curve_{model_name.replace(' ', '_').lower()}.png"
+        plt.savefig(calibration_curve_file_path, dpi=300, bbox_inches="tight")
+        plt.close()
+
+    except AttributeError:
+        print(f"   └── ⚠️ Model {model_name} does not support `predict_proba`. Skipping calibration curve generation.")
+    except Exception as e:
+        print(f"   ⚠️ Error generating calibration curve for {model_name}: {str(e)}")
 
     # Combine test and training metrics into a single formatted string for each metric
     formatted_metrics = {

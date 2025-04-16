@@ -47,7 +47,13 @@ Folder Structure:
    bash run.sh
    ```
 
-4. Experiment with the ML pipeline by modifying the configuration in `config.yaml`.
+4. Experiment with the ML pipeline by modifying the configuration in `config.yaml`
+
+5. [Optional] Reset the project
+
+   ```bash
+   bash reset.sh
+   ```
 
 ## 🏭 Pipeline Flow
 
@@ -138,6 +144,8 @@ The choice of evaluation metrics is critical in ensuring that the models develop
 
    This granular view helps identify specific weaknesses in the model, such as whether it struggles more with false positives or false negatives. For instance, if the cost of missing a no-show (FN) is higher than incorrectly flagging a show as a no-show (FP), we can adjust the decision threshold accordingly.
 
+Use feature importance instea of SHAP values as calculating SHAP values is computationally very expensive and this problem does not need that much interpretability. But if required can add that in.
+
 Given the business context of no-show prediction, the following considerations guided the choice of metrics:
 
 Imbalanced Dataset : With fewer "No-Show" instances compared to "Show," metrics like accuracy alone would be insufficient. Instead, F1-score and ROC-AUC provide a more nuanced evaluation of model performance.
@@ -156,3 +164,7 @@ Balancing Precision and Recall : While high recall is desirable, excessively low
 - Advanced Feature Engineering : Incorporate interaction terms or domain-specific features.
 - Deployment : Deploy the best-performing model as a REST API for real-time predictions.
 - Monitoring : Track model performance in production to detect drift and retrain as needed.
+
+## Troubleshooting
+
+1. Reset the project by running the script above and try again

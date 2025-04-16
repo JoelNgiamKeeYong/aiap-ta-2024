@@ -6,7 +6,7 @@ SAVE_PATH="data/noshow.db"
 
 # Check if the dataset exists
 if [ ! -f "$SAVE_PATH" ]; then
-    echo "❌ Error: Dataset '$SAVE_PATH' not found in the 'data' folder."
+    echo "⚠️  Dataset '$SAVE_PATH' not found in the 'data' folder."
     
     # Prompt the user to download the dataset automatically
     read -p "   Do you want to download the dataset automatically? (y/n): " choice
