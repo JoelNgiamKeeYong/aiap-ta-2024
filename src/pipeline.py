@@ -28,47 +28,65 @@ def main():
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
-    # Set environment variables for parallel processing
-    os.environ['LOKY_MAX_CPU_COUNT'] = config["LOKY_MAX_CPU_COUNT"]
+    # Define constants from the configuration
+    LOKY_MAX_CPU_COUNT = config["LOKY_MAX_CPU_COUNT"]
+    DB_PATH = config["db_path"]
+    DB_TABLE_NAME = config["db_table_name"]
+    TARGET = config["target"]
+    TEST_SIZE = config["test_size"]
+    RANDOM_STATE = config["random_state"]
+    N_JOBS = config["n_jobs"]
+    CV_FOLDS = config["cv_folds"]
+    SCORING_METRIC = config["scoring_metric"]
+    LR_PARAMS = config["model_configuration"]["Logistic Regression"]["params"]
+    XG_PARAMS = config["model_configuration"]["XGBoost"]["params"]
+    LGBM_PARAMS = config["model_configuration"]["LightGBM"]["params"]
 
-    # Set the backend for matplotlib to avoid display issues
-    matplotlib.use('Agg') 
+    # Set environment variables 
+    os.environ['LOKY_MAX_CPU_COUNT'] = LOKY_MAX_CPU_COUNT  # Set environment variables for parallel processing
+    matplotlib.use('Agg')  # Set the backend for matplotlib to avoid display issues
 
     # Step 1: Load the dataset
-    df = load_data(config["db_path"], config["db_table_name"])  
+    df = load_data(db_path=DB_PATH, db_table_name=DB_TABLE_NAME)  
 
     # Step 2: Clean the dataset
-    df_cleaned = clean_data(df)
+    df_cleaned = clean_data(df=df)
 
     # Step 3: Perform feature engineering
 
 
-
     # Step 3: Preprocess the dataset, including cleaning and feature engineering
-    X_train, X_test, y_train, y_test, feature_names = preprocess_data(df_cleaned, config["test_size"], config["random_state"])
+    X_train, X_test, y_train, y_test, feature_names = preprocess_data(
+        df_cleaned=df_cleaned,
+        target=TARGET,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE
+    )
 
     # Step 4: Define the models and their respective hyperparameter grids
     models = {
         "Logistic Regression": {
-            "model": LogisticRegression(max_iter=1000, random_state=config["random_state"]),
-            "params": config["model_configuration"]['Logistic Regression']['params']
+            "model": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+            "params": LR_PARAMS
         },
         "XGBoost": {
-            "model": XGBClassifier(eval_metric='logloss', random_state=config["random_state"]),
-            "params": config["model_configuration"]['XGBoost']['params']
+            "model": XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE),
+            "params": XG_PARAMS
         },
         "LightGBM": {  
-            "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=config["random_state"]),
-            "params": config["model_configuration"]['LightGBM']['params'] 
+            "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
+            "params": LGBM_PARAMS
         }
     }    
-
 
     # Step 4: Traing and evaluate models
     train_and_evaluate_models(
         models,
         X_train, X_test, y_train, y_test,
-        config["n_jobs"], config["cv_folds"], config["scoring_metric"], feature_names
+        n_jobs=N_JOBS, 
+        cv_folds=CV_FOLDS,
+        scoring_metric=SCORING_METRIC,
+        feature_names=feature_names
     )
 
     # Record time taken for pipeline execution

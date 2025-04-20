@@ -1,5 +1,7 @@
 # src/utils/__init__.py
 
+from .analyse_missing_values import analyse_missing_values
 from .compare_dataframes import compare_dataframes
-from .perform_column_analysis import perform_column_analysis
+from .perform_bivariate_analysis import perform_bivariate_analysis
 from .perform_univariate_analysis import perform_univariate_analysis
+from .remove_irrelevant_features import remove_irrelevant_features

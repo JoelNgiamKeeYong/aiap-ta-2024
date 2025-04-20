@@ -77,7 +77,12 @@ The pipeline consists of the following logical steps:
 | `booking_month` | Converted to int |
 | `price`         | Normalized       |
 
-## 🤖 Model Selection
+Why use Standard Scaler over MinMax Scaler
+Why use OneHotEncoding over Ordinal Encoder
+
+Why never use sklearn pipeline function to combine preprocessing and training? Instead using separate functions
+
+## 🤖 Candidate Models
 
 The selection of machine learning models for predicting customer no-shows was guided by the following key considerations:
 

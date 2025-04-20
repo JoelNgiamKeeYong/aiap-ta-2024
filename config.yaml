@@ -8,6 +8,7 @@ LOKY_MAX_CPU_COUNT: "4" # Maximum number of CPU cores to use for parallel proces
 data_url: "https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db" # URL to download the SQLite database file
 db_path: "data/noshow.db" # Path to the SQLite database file containing the dataset.
 db_table_name: "noshow" # Name of the table in the database that contains the data.
+target: "no_show" # Name of the target variable in the dataset. This is the variable we want to predict.
 
 # Data preprocessing configurations
 test_size: 0.1 # Proportion of the dataset to include in the test split (10%).
@@ -16,6 +17,7 @@ random_state: 42 # Random seed for reproducibility across train-test splits.
 # Model training configurations
 cv_folds: 3 # Number of cross-validation folds for hyperparameter tuning. A smaller number speeds up training but may reduce robustness.
 n_jobs: -1 # Number of parallel jobs to run (-1 means use all available CPU cores). Set to a specific number if you want to limit resource usage.
+scoring_metric: "f1" # Metric to optimize during hyperparameter tuning. F1 score is ideal for binary classification tasks where both precision and recall are important.
 
 # Model-specific hyperparameter configurations
 model_configuration:
@@ -47,5 +49,3 @@ model_configuration:
       colsample_bytree: [0.8] # Fraction of features to use for each tree. Helps reduce overfitting.
       reg_lambda: [0.1] # L2 regularization term. Penalizes large weights to prevent overfitting.
 
-# Evaluation metric
-scoring_metric: "f1" # Metric to optimize during hyperparameter tuning. F1 score is ideal for binary classification tasks where both precision and recall are important.
