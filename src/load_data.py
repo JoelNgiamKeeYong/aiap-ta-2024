@@ -36,7 +36,7 @@ def load_data(db_path, db_table_name):
 
     end_time = time.time() 
     elapsed_time = end_time - start_time
-    print(f"\n✅ Completed in {elapsed_time:.2f} seconds. Successfully loaded {len(data):,} records from the database!")
+    print(f"\n✅ {len(data):,} records successfully loaded in {elapsed_time:.2f} seconds!")
     return data
 
 

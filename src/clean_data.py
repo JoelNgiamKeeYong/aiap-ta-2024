@@ -66,7 +66,6 @@ def clean_data(df):
             ("num_children", clean_num_children_column),
         ]
         for column_name, cleaning_function in cleaning_steps:
-            print(f"       └── Cleaning column: {column_name}...")
             df_cleaned = cleaning_function(df_cleaned)
 
         # Step 3: Compare original and cleaned DataFrames
@@ -79,7 +78,7 @@ def clean_data(df):
 
         end_time = time.time() 
         elapsed_time = end_time - start_time
-        print(f"✅ Completed in {elapsed_time:.2f} seconds. Data cleaning completed successfully!")
+        print(f"✅ Data cleaning completed in {elapsed_time:.2f} seconds!")
         return df_cleaned
 
     except Exception as e:

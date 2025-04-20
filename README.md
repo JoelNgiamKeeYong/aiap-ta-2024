@@ -82,6 +82,8 @@ Why use OneHotEncoding over Ordinal Encoder
 
 Why never use sklearn pipeline function to combine preprocessing and training? Instead using separate functions
 
+Why use GridSearch CV and not Randomized Search?
+
 ## 🤖 Candidate Models
 
 The selection of machine learning models for predicting customer no-shows was guided by the following key considerations:

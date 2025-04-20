@@ -36,6 +36,7 @@ if [ ! -f "$SAVE_PATH" ]; then
         echo "   └── Downloading from $DATA_URL..."
         if curl -o "$SAVE_PATH" "$DATA_URL" --fail --silent --show-error; then
             echo "   └── Saving to $SAVE_PATH..."
+            echo
             echo "✅ Dataset downloaded successfully!"
             echo
         else
