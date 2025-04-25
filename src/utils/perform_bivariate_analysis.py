@@ -27,7 +27,7 @@ def perform_bivariate_analysis(df, col1, col2):
     if col2 not in df.columns:
         raise ValueError(f"❌ Column '{col2}' not found in the DataFrame.")
 
-    print(f"📊 Performing bivariate analysis between:")
+    print(f"Performing bivariate analysis between:")
 
     # Determine column types
     col1_type = "categorical" if df[col1].dtype in ['object', 'category'] else "numerical"
@@ -73,9 +73,9 @@ def perform_bivariate_analysis(df, col1, col2):
             elif cramers_v > 0.1:
                 print("   └── ⚠️ Significant association with moderate effect.")
             else:
-                print("   └── ✅ Significant association with weak effect.")
+                print("   └── Significant association with weak effect.")
         else:
-            print("   └── ✅ No significant association.")
+            print("   └── No significant association.")
         
         # Define a consistent color palette for col2 categories
         unique_categories_col2 = df[col2].unique()
@@ -205,9 +205,9 @@ def perform_bivariate_analysis(df, col1, col2):
                 elif abs(r) > 0.3:
                     print("   └── ⚠️ Significant correlation with moderate effect.")
                 else:
-                    print("   └── ✅ Significant correlation with weak effect.")
+                    print("   └── Significant correlation with weak effect.")
             else:
-                print("   └── ✅ No significant correlation.")
+                print("   └── No significant correlation.")
 
         # 🧪 Statistical Test 2: ANOVA-like comparison for non-binary categorical variables
         # - Tests whether the means of the numerical variable are significantly different across the categories of the categorical variable.
@@ -228,9 +228,9 @@ def perform_bivariate_analysis(df, col1, col2):
                 elif f_stat > 2:
                     print("   └── ⚠️ Significant differences with moderate evidence.")
                 else:
-                    print("   └── ✅ Significant differences with weak evidence.")
+                    print("   └── Significant differences with weak evidence.")
             else:
-                print("   └── ✅ No significant differences in means across categories.")
+                print("   └── No significant differences in means across categories.")
 
         # Create a figure with four subplots (2 rows, 2 columns)
         fig, axes = plt.subplots(2, 2, figsize=(14, 8))
@@ -324,7 +324,7 @@ def perform_bivariate_analysis(df, col1, col2):
             elif pearson_corr < -0.3:
                 print("   └── ⚠️ Significant correlation with moderate negative effect.")
             elif pearson_corr < 0.3:
-                print("   └── ✅ Significant correlation with weak effect.")
+                print("   └── Significant correlation with weak effect.")
             elif pearson_corr < 0.5:
                 print("   └── ⚠️ Significant correlation with moderate positive effect.")
             elif pearson_corr < 0.7:
@@ -332,7 +332,7 @@ def perform_bivariate_analysis(df, col1, col2):
             else:
                 print("   └── ⚠️ Significant correlation with very strong positive effect.")
         else:
-            print("   └── ✅ No significant linear correlation (Pearson).")
+            print("   └── No significant linear correlation (Pearson).")
 
         # 🧪 Statistical Test 2: Spearman Correlation
         # - Measures the monotonic relationship between two continuous variables.
@@ -353,7 +353,7 @@ def perform_bivariate_analysis(df, col1, col2):
             elif spearman_corr < -0.3:
                 print("   └── ⚠️ Significant monotonic correlation with moderate negative effect.")
             elif spearman_corr < 0.3:
-                print("   └── ✅ Significant monotonic correlation with weak effect.")
+                print("   └── Significant monotonic correlation with weak effect.")
             elif spearman_corr < 0.5:
                 print("   └── ⚠️ Significant monotonic correlation with moderate positive effect.")
             elif spearman_corr < 0.7:
@@ -361,7 +361,7 @@ def perform_bivariate_analysis(df, col1, col2):
             else:
                 print("   └── ⚠️ Significant monotonic correlation with very strong positive effect.")
         else:
-            print("   └── ✅ No significant monotonic correlation (Spearman).")
+            print("   └── No significant monotonic correlation (Spearman).")
 
         # Create a figure with subplots (2 rows, 2 columns)
         fig, axes = plt.subplots(2, 2, figsize=(14, 8))

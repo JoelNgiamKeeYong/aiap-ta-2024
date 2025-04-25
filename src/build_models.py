@@ -46,7 +46,12 @@ def build_models(
 
         # Split the data into training and testing sets
         print("   └── Splitting the data into training and testing sets...")
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, 
+            stratify=y,                  # Ensures the same class distribution in train and test sets, important for imbalanced datasets
+            test_size=test_size,         # Set in the config.yaml
+            random_state=random_state    # To ensure reproducibility as per EDA
+        )
 
         # Define numerical and categorical features
         print("   └── Defining numerical and categorical features...")

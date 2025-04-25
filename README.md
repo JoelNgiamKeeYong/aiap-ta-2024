@@ -61,11 +61,34 @@ The pipeline consists of the following logical steps:
 
 1. Data Loading : Load data from data/noshow.db using SQLite.
 2. Data Cleaning : Handle missing values, duplicates, and inconsistencies.
+
+Train Test Split
+
+You should perform the train-test split before feature engineering to prevent data leakage and ensure that your model evaluation is unbiased. This approach aligns with best practices in machine learning and will help you build a robust and reliable predictive model for your hotel no-show prediction task. As we are building a predictive model and want to test on unseen data, to mimic production next time, we should split it before extensive EDA, so that when we evaluate the model, we can evaluate it on the unseen test data set. However, this may mean that some information from the test set may not be captured in the model. Despite this, a model that performs well on unseen data is more valuable than one that perfectly fits the training data but fails in production.
+
+A stratified split ensures that the proportion of classes in the target variable (y) is preserved in both the training and testing sets. This is particularly useful for imbalanced datasets.
+
+Used 20% train test split, so sufficient data in training and testing. Also need quite a bit for training as we doing cross-validation as well
+
+Use grid search CV (instead of randomized search cv, why?) --> Do option to change randomized search to grid search in config, as randomized search more computationally efficient and use it first to run multiple runs to see what is the best and exploring what are the best parameters, then use grid search to fine tune
+
+Why use normalisation or min-max scaler
+
+Why never apply oversampling / undersampling
+
 3. Feature Engineering : Preprocess features (e.g., encode categorical variables, normalize numerical features).
 4. Model Training : Train multiple models (e.g., Logistic Regression, Random Forest, XGBoost).
 5. Model Evaluation : Evaluate models using metrics such as Accuracy, Precision, Recall, F1-Score, and ROC-AUC.
 
 ## 🔎 EDA Findings
+
+- EDA is carried out in the following process:
+
+[Insert-image]
+
+- Rather than dedicating separate sections to univariate, bivariate, and multivariate analyses, I have integrated these tools into broader, purpose-driven sections within the exploratory data analysis (EDA) pipeline. This approach reflects the iterative nature of EDA—univariate analysis might identify missing values or outliers during data cleaning, while later revisiting it after feature engineering to validate new features. Organizing the analysis into sections like data cleaning. comprehensive exploration and feature engineering ensures a logical, coherent workflow that aligns with the progression of an end-to-end machine learning pipeline.
+
+- This structure avoids redundancy and enhances clarity by focusing on practical outcomes, such as improving model performance or addressing business needs. Readers can easily follow the progression of the analysis, as each section has a clear purpose, demonstrating both depth and rigor without unnecessary repetition.
 
 - High no-show rates in certain `booking_month`s; influenced pipeline feature selection.
 
@@ -175,3 +198,7 @@ Balancing Precision and Recall : While high recall is desirable, excessively low
 ## Troubleshooting
 
 1. Reset the project by running the script above and try again
+
+## FAQ
+
+1.

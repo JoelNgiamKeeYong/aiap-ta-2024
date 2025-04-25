@@ -12,6 +12,7 @@ from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 
 # Importing custom modules
+from utils import compare_dataframes
 from load_data import load_data 
 from clean_data import clean_data
 from build_models import build_models
@@ -56,9 +57,16 @@ def main():
     df = load_data(db_path=DB_PATH, db_table_name=DB_TABLE_NAME)  
 
     # Step 2: Clean the dataset
-    df_cleaned = clean_data(df=df)
+    irrelevant_features = ['booking_id']
+    df_cleaned = clean_data(
+        df=df, save_data=True,
+        remove_irrelevant_features=True, irrelevant_features=irrelevant_features,
+        columns_to_clean=[col for col in df.columns if col not in irrelevant_features]
+    )
+    compare_dataframes(df_original=df, df_cleaned=df_cleaned)
 
-    # Step 3: Perform feature engineering
+    # Step 3: Perform preprocessing (e.g. removing outliers, feature selection, feature engineering) based on training data
+    # - Excludes test data information (to avoid data leakage)
     ###
     ###
 

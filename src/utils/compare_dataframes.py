@@ -1,4 +1,4 @@
-# src/utils/compare_datagrames.py
+# src/utils/compare_dataframes.py
 
 def compare_dataframes(df_original, df_cleaned):
     """
@@ -28,23 +28,23 @@ def compare_dataframes(df_original, df_cleaned):
     size_reduction = size_before - size_after
 
     # Step 4: Display Results
-    print("\n   📚 Comparing between original and new DataFrames:\n")
-    print(f"       └── 📘 Rows Before: {rows_before:,}")
-    print(f"       └── 📘 Rows After: {rows_after:,}")
-    print(f"       └── 📘 Dropped Rows: {rows_dropped:,} ({rows_dropped / rows_before:.2%} of total rows)\n")
+    print("\n📚 Comparing between original and new DataFrames:\n")
+    print(f"    └── 📘 Rows Before: {rows_before:,}")
+    print(f"    └── 📘 Rows After: {rows_after:,}")
+    print(f"    └── 📘 Dropped Rows: {rows_dropped:,} ({rows_dropped / rows_before:.2%} of total rows)\n")
 
-    print(f"       └── 📙 Columns Before: {cols_before}")
-    print(f"       └── 📙 Columns After: {cols_after}")
+    print(f"    └── 📙 Columns Before: {cols_before}")
+    print(f"    └── 📙 Columns After: {cols_after}")
     if dropped_columns:
-        print(f"       └── 📙 Dropped Columns: {', '.join(dropped_columns)}")
+        print(f"    └── 📙 Dropped Columns: {', '.join(dropped_columns)}")
     else:
-        print("       └── 📙 No columns were dropped.")
+        print("    └── 📙 No columns were dropped.")
     if added_columns:
-        print(f"       └── 📙 Added Columns: {', '.join(added_columns)}")
+        print(f"    └── 📙 Added Columns: {', '.join(added_columns)}")
     else:
-        print("       └── 📙 No columns were added.")
+        print("    └── 📙 No columns were added.")
     print()
 
-    print(f"       └── 📗 Data Size Before: {size_before:.2f} MB")
-    print(f"       └── 📗 Data Size After: {size_after:.2f} MB")
-    print(f"       └── 📗 Size Reduction: {size_reduction:.2f} MB ({size_reduction / size_before:.2%} reduction)")
+    print(f"    └── 📗 Data Size Before: {size_before:.2f} MB")
+    print(f"    └── 📗 Data Size After: {size_after:.2f} MB")
+    print(f"    └── 📗 Size Reduction: {size_reduction:.2f} MB ({size_reduction / size_before:.2%} reduction)")

@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
+from scipy.stats import zscore
 
 def perform_univariate_analysis(
     df, 
@@ -40,7 +41,6 @@ def perform_univariate_analysis(
     print(f"💎 Number of Unique Values: {df[column_name].nunique()}")
     print(f"📋 List of Unique Categories: {df[column_name].unique().tolist()}")
     if show_distribution:
-        # Categorical column analysis
         value_counts = df[column_name].value_counts(normalize=True).to_frame(name='Proportion')
         value_counts['Count'] = df[column_name].value_counts()
         print("📊 Value Distribution:")
@@ -54,16 +54,59 @@ def perform_univariate_analysis(
         kurtosis = df[column_name].kurtosis()
         print("📊 Summary Statistics:")
         display(summary_stats.style.format('{:.2f}'))
-        print(f"📈 Skewness: {skewness:.2f}")
-        print(f"📈 Kurtosis: {kurtosis:.2f}")
+        print("📈 Data Distribution: ")
+        print(f"   └── Skewness: {skewness:.2f}")
+        print(f"   └── Kurtosis: {kurtosis:.2f}")
+
+        # Determine outlier detection method based on skewness and kurtosis
+        if abs(skewness) > 1 or abs(kurtosis - 3) > 2:  # Non-normal data
+            print("\n🔍 Outlier Detection Method: Using IQR (Interquartile Range)")
+            print("   └── Reason: High skewness or kurtosis suggests non-normal distribution.")
+            
+            # Outlier Detection Using IQR
+            Q1 = df[column_name].quantile(0.25)
+            Q3 = df[column_name].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound_iqr = Q1 - 1.5 * IQR
+            upper_bound_iqr = Q3 + 1.5 * IQR
+            outliers_iqr = df[(df[column_name] < lower_bound_iqr) | (df[column_name] > upper_bound_iqr)]
+            num_outliers_iqr = len(outliers_iqr)
+            total_rows = len(df)
+            outlier_percentage_iqr = (num_outliers_iqr / total_rows) * 100
+
+            if num_outliers_iqr == 0:
+                print("   └── ✅ No outliers detected using the IQR method.")
+            else:
+                print(f"   └── ⚠️ {num_outliers_iqr} outliers detected ({outlier_percentage_iqr:.2f}% of total rows).")
+                print(f"   └── Lower Bound: {lower_bound_iqr:.2f}")
+                print(f"   └── Upper Bound: {upper_bound_iqr:.2f}")
+                print("   └── Outliers Summary:")
+                display(outliers_iqr[[column_name]].describe().style.format('{:.2f}'))
+
+        else:  # Normal data
+            print("\n🔍 Outlier Detection Method: Using Z-Score")
+            print("   └── Reason: Low skewness and kurtosis suggest approximately normal distribution.")
+            
+            # Outlier Detection Using Z-Scores
+            z_scores = zscore(df[column_name].dropna())
+            outliers_z = df[abs(z_scores) > 3]
+            num_outliers_z = len(outliers_z)
+            outlier_percentage_z = (num_outliers_z / len(df)) * 100
+
+            if num_outliers_z == 0:
+                print("   └── ✅ No outliers detected using the Z-Score method.")
+            else:
+                print(f"   └── ⚠️ {num_outliers_z} outliers detected ({outlier_percentage_z:.2f}% of total rows).")
+                print("   └── Outliers List:")
+                display(outliers_z[[column_name]].style.format('{:.2f}'))
 
     # Check for missing values
     missing_count = df[column_name].isnull().sum()
     missing_percentage = (missing_count / len(df)) * 100  # Calculate percentage of missing rows
     if missing_count == 0:
-        print("✅ No missing values found.")
+        print("\n✅ No missing values found.")
     else:
-        print(f"⚠️ Rows with missing values: {missing_count} ({missing_percentage:.2f}% of total rows)")
+        print(f"\n⚠️ Rows with missing values: {missing_count} ({missing_percentage:.2f}% of total rows)")
         missing_rows = df[df[column_name].isnull()]
         display(missing_rows)
 

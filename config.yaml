@@ -11,11 +11,12 @@ db_table_name: "noshow" # Name of the table in the database that contains the da
 target: "no_show" # Name of the target variable in the dataset. This is the variable we want to predict.
 
 # Data preprocessing configurations
-test_size: 0.1 # Proportion of the dataset to include in the test split (10%).
+test_size: 0.2 # Proportion of the dataset to include in the test split (20%).
 random_state: 42 # Random seed for reproducibility across train-test splits.
 
 # Model training configurations
-cv_folds: 3 # Number of cross-validation folds for hyperparameter tuning. A smaller number speeds up training but may reduce robustness.
+use_randomized_cv: False # To set True if running large array of parameters, then use False to use GridSearch CV to search
+cv_folds: 5 # Number of cross-validation folds for hyperparameter tuning. A smaller number speeds up training but may reduce robustness.
 n_jobs: -1 # Number of parallel jobs to run (-1 means use all available CPU cores). Set to a specific number if you want to limit resource usage.
 scoring_metric: "f1" # Metric to optimize during hyperparameter tuning. F1 score is ideal for binary classification tasks where both precision and recall are important.
 
