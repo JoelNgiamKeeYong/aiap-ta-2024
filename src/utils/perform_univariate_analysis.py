@@ -52,11 +52,18 @@ def perform_univariate_analysis(
         summary_stats = df[column_name].describe().to_frame().T
         skewness = df[column_name].skew()
         kurtosis = df[column_name].kurtosis()
+
+        # Define thresholds for skewness and kurtosis
+        skewness_threshold = 1.0  # Values > |1.0| indicate moderate skewness
+        kurtosis_threshold = 3.0  # Values > 3.0 indicate heavy tails (potential outliers)
+
         print("📊 Summary Statistics:")
-        display(summary_stats.style.format('{:.2f}'))
+        display(summary_stats.style.format('{:.2f}'))    
         print("📈 Data Distribution: ")
-        print(f"   └── Skewness: {skewness:.2f}")
-        print(f"   └── Kurtosis: {kurtosis:.2f}")
+        skewness_warning = "⚠️" if abs(skewness) > skewness_threshold else ""
+        kurtosis_warning = "⚠️" if kurtosis > kurtosis_threshold else ""
+        print(f"   └── Skewness: {skewness:.2f} {skewness_warning}")
+        print(f"   └── Kurtosis: {kurtosis:.2f} {kurtosis_warning}")
 
         # Determine outlier detection method based on skewness and kurtosis
         if abs(skewness) > 1 or abs(kurtosis - 3) > 2:  # Non-normal data
@@ -92,13 +99,14 @@ def perform_univariate_analysis(
             outliers_z = df[abs(z_scores) > 3]
             num_outliers_z = len(outliers_z)
             outlier_percentage_z = (num_outliers_z / len(df)) * 100
+            outliers_list = outliers_z[column_name].to_list()
+            formatted_list = ', '.join(f"{value:.2f}" for value in outliers_list)
 
             if num_outliers_z == 0:
                 print("   └── ✅ No outliers detected using the Z-Score method.")
             else:
                 print(f"   └── ⚠️ {num_outliers_z} outliers detected ({outlier_percentage_z:.2f}% of total rows).")
-                print("   └── Outliers List:")
-                display(outliers_z[[column_name]].style.format('{:.2f}'))
+                print(f"   └── Outliers List: {formatted_list}")
 
     # Check for missing values
     missing_count = df[column_name].isnull().sum()

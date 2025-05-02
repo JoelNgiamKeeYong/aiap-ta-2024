@@ -7,6 +7,10 @@
 - Full Name: **Joel Ngiam Kee Yong**
 - Email: [joelngiam@yahoo.com.sg](joelngiam@yahoo.com.sg)
 
+## Problem Statement
+
+asdadas
+
 ## 🌐 Overview
 
 This project predicts hotel no-shows using a modular and configurable machine learning pipeline. The pipeline is designed to be **reusable**, **interpretable**, and **scalable** for experimentation with different models and preprocessing steps.
@@ -14,12 +18,12 @@ This project predicts hotel no-shows using a modular and configurable machine le
 Folder Structure:
 
 ```
+├── archives/              # Folder for inactive files and logs
 ├── assets/                # Images or visualization assets
-├── data/                  # Location for datasets
-├── models/                # Saved preprocessor and trained models
-├── output/                # Results of model evaluations
+├── data/                  # Location for datasets; auto-generated
+├── models/                # Saved preprocessor and trained models; auto-generated
+├── output/                # Results of model evaluations; auto-generated
 ├── src/                   # Python modules for the ML pipeline
-│   ├── helpers/           # Helper functions for specific project preprocessing
 │   └── utils/             # Utility functions for general EDA
 │   └── pipeline.py        # Main executable for the pipeline
 ├── config.yaml            # Configuration file for the ML pipeline
@@ -44,7 +48,8 @@ Folder Structure:
 3. Run the ML pipeline by executing the bash script
 
    ```bash
-   bash run.sh
+   bash run.sh  # Run the full ML pipeline
+   bash run.sh --lite  # Run the pipeline in lite mode, for quick debugging of pipeline
    ```
 
 4. Experiment with the ML pipeline by modifying the configuration in `config.yaml`
@@ -94,11 +99,24 @@ Why never apply oversampling / undersampling
 
 ## 🛠️ Feature Processing
 
-| Feature         | Processing       |
-| --------------- | ---------------- |
-| `country`       | One-hot encoded  |
-| `booking_month` | Converted to int |
-| `price`         | Normalized       |
+| Feature          | Source     | Processing                   |
+| ---------------- | ---------- | ---------------------------- |
+| `booking_id`     | Original   | Dropped                      |
+| `no_show`        | Original   | Target, unchanged            |
+| `branch`         | Original   | Converted to `category` type |
+| `booking_month`  | Original   | Converted to `int` type      |
+| `arrival_month`  | Original   | Converted to int             |
+| `arrival_day`    | Original   | Converted to int             |
+| `checkout_month` | Original   | Converted to int             |
+| `checkout_day`   | Original   | Converted to int             |
+| `country`        | Original   | One-hot encoded              |
+| `first_time`     | Original   | One-hot encoded              |
+| `room`           | Original   | One-hot encoded              |
+| `price`          | Original   | Normalized                   |
+| `platform`       | Original   | One-hot encoded              |
+| `num_adults`     | Original   | One-hot encoded              |
+| `num_children`   | Original   | One-hot encoded              |
+| `currency_type`  | Engineered | One-hot encoded              |
 
 Why use Standard Scaler over MinMax Scaler
 Why use OneHotEncoding over Ordinal Encoder

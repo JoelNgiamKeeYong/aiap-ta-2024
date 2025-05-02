@@ -1,13 +1,17 @@
 # src/pipeline.py
 # This script orchestrates the entire pipeline for the project.
 
+# Use a sequential processing methodology for the pipeline (i.e. executing tasks in a linear order, one after the another). Each stage depends on the output of the last stage --> straightfoward and predictable workflow. Intuitive and easier to debug since one task is completed before the next. Since our dataset is smaller it is okay. For future, may consider using parallel processing for larger scale projects due to increased complexity. However, requires more careful orchestration to ensure data dependencies are adequately managed. Better optimization of resources. Essential for big data applications.
+
 import os
 import time
+import math
 import yaml
 import argparse
 import matplotlib
 from tabulate import tabulate
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 
@@ -15,7 +19,8 @@ from lightgbm import LGBMClassifier
 from utils import compare_dataframes
 from load_data import load_data 
 from clean_data import clean_data
-from build_models import build_models
+from preprocess_data import preprocess_data
+from train_models import train_models
 from evaluate_models import evaluate_models
 
 def main():
@@ -24,11 +29,8 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run the ML prediction pipeline")
-    parser.add_argument("--model", default="random_forest", choices=["random_forest", "logistic_regression", "xgboost"])
+    parser.add_argument("--lite", action="store_true", help="Run the pipeline in lite mode: uses a simpler model.")
     args = parser.parse_args()
-    # To add more configurations here
-    ###
-    ###
 
     # Load configuration from YAML file
     config_path = "config.yaml"
@@ -46,6 +48,7 @@ def main():
     CV_FOLDS = config["cv_folds"]
     SCORING_METRIC = config["scoring_metric"]
     LR_PARAMS = config["model_configuration"]["Logistic Regression"]["params"]
+    RF_PARAMS = config["model_configuration"]["Random Forest"]["params"]
     XG_PARAMS = config["model_configuration"]["XGBoost"]["params"]
     LGBM_PARAMS = config["model_configuration"]["LightGBM"]["params"]
 
@@ -59,61 +62,71 @@ def main():
     # Step 2: Clean the dataset
     irrelevant_features = ['booking_id']
     df_cleaned = clean_data(
-        df=df, save_data=True,
+        df=df, 
+        save_data=True,
         remove_irrelevant_features=True, irrelevant_features=irrelevant_features,
         columns_to_clean=[col for col in df.columns if col not in irrelevant_features]
     )
-    compare_dataframes(df_original=df, df_cleaned=df_cleaned)
+    compare_dataframes(df_original=df, df_new=df_cleaned, original_name_string="raw", new_name_string="cleaned")
 
     # Step 3: Perform preprocessing (e.g. removing outliers, feature selection, feature engineering) based on training data
     # - Excludes test data information (to avoid data leakage)
-    ###
-    ###
+    X_train, X_test, y_train, y_test, df_preprocessed, feature_names = preprocess_data(
+        df_cleaned=df_cleaned,
+        save_data=True,
+        target=TARGET, test_size=TEST_SIZE, random_state=RANDOM_STATE
+    )
+    compare_dataframes(df_original=df_cleaned, df_new=df_preprocessed, original_name_string="cleaned", new_name_string="preprocessed", show_verbose=False)
 
     # Step 4: Define the models and their respective hyperparameter grids
-    models = {
-        "Logistic Regression": {
-            "model": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-            "params": LR_PARAMS
-        },
-        "XGBoost": {
-            "model": XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE),
-            "params": XG_PARAMS
-        },
-        "LightGBM": {  
-            "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
-            "params": LGBM_PARAMS
+    if args.lite:
+        models = {
+            "LightGBM": {  
+                "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
+                "params": LGBM_PARAMS
+            }
         }
-    }    
+    else:
+        models = {
+            "Logistic Regression": {
+                "model": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+                "params": LR_PARAMS
+            },
+            "Random Forest": {
+                "model": RandomForestClassifier(random_state=RANDOM_STATE),
+                "params": RF_PARAMS
+            },
+            "XGBoost": {
+                "model": XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE),
+                "params": XG_PARAMS
+            },
+            "LightGBM": {  
+                "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
+                "params": LGBM_PARAMS
+            }
+        }
 
-    # Step 5: Build the models
-    trained_models, X_train, X_test, y_train, y_test = build_models(
-        df_cleaned=df_cleaned,
-        target=TARGET,
-        models=models,
-        n_jobs=N_JOBS, 
-        cv_folds=CV_FOLDS,
-        scoring_metric=SCORING_METRIC,
-        test_size=TEST_SIZE,
-        random_state=RANDOM_STATE
+    # Step 5: Train the models
+    trained_models = train_models(
+        X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test,
+        models=models, 
+        n_jobs=N_JOBS, cv_folds=CV_FOLDS, scoring_metric=SCORING_METRIC,
     )
 
     # Step 6: Evaluate the models
-    evaluate_models(
+    trained_models = evaluate_models(
         trained_models=trained_models,
-        X_train=X_train,
-        X_test=X_test,
-        y_train=y_train,
-        y_test=y_test
+        feature_names=feature_names,
+        X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test
     )
 
     # Print a summary table of training times and model sizes
-    print("\n📊 Summary Table of Training Times and Model Sizes:")
+    print("\nPipeline Summary Table:")
     table_data = [
-        [model_name, training_time, model_size_kb]
-        for model_name, best_model, training_time, model_size_kb in trained_models
+        [model_name, f"{model_size_kb:.2f}", f"{training_time:.2f}", f"{evaluation_time:.2f}"]
+        for model_name, best_model, training_time, model_size_kb, evaluation_time in trained_models
     ]
-    headers = ["Model Name", "Training Time (s)", "Model Size (KB)"]
+    headers = ["Model Name", "Model Size (KB)", "Training Time (s)", "Evaluation Time (s)"]
     print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
     # Record time taken for pipeline execution

@@ -34,7 +34,7 @@ def clean_data(
 
         # Step 1: Remove irrelevant features
         if remove_irrelevant_features and len(irrelevant_features) > 0:
-            print(f"   └── Removing irrelevant columns: {', '.join(irrelevant_features)}...")
+            print(f"   └── Removing irrelevant columns: {irrelevant_features}...")
             df_cleaned = df_cleaned.drop(columns=irrelevant_features, errors='ignore')
 
         # Step 2: Apply cleaning steps to specified columns
@@ -218,12 +218,11 @@ def clean_first_time_function(df_cleaned, column_name):
 def clean_room_function(df_cleaned, column_name):
     df_cleaned = df_cleaned.copy()
 
-    # Step 1: Remove rows with missing values in the specified column
-    initial_rows = len(df_cleaned)
-    print(f"      └── Removing rows with missing values in {column_name} column...")
-    df_cleaned = df_cleaned.dropna(subset=[column_name])
-    removed_rows = initial_rows - len(df_cleaned)
-    print(f"      └── Removed {removed_rows} rows with missing values.")
+    # Step 1: Impute missing values with "Missing"
+    print(f"      └── Imputing missing values in {column_name} column with 'Missing'...")
+    initial_missing = df_cleaned[column_name].isnull().sum()
+    df_cleaned[column_name] = df_cleaned[column_name].fillna("Missing")
+    print(f"      └── Imputed {initial_missing} missing values with 'Missing'.")
 
     # Step 2: Convert the column to categorical type
     print(f"      └── Converting {column_name} column to categorical type...")
@@ -235,12 +234,12 @@ def clean_price_function(df_cleaned, column_name):
     df_cleaned = df_cleaned.copy()
     exchange_rate = 1.35  # Exchange rate for USD to SGD
 
-    # Step 1: Drop rows with missing values in the specified column
-    initial_rows = len(df_cleaned)
-    print(f"      └── Removing rows with missing values in {column_name} column...")
-    df_cleaned = df_cleaned.dropna(subset=[column_name])
-    removed_rows = initial_rows - len(df_cleaned)
-    print(f"      └── Removed {removed_rows} rows with missing values.")
+    # Step 1: Impute missing values with 0
+    print(f"      └── Imputing missing values in {column_name} column with 0...")
+    initial_missing = df_cleaned[column_name].isnull().sum()
+    df_cleaned[column_name] = df_cleaned[column_name].fillna(0)
+    remaining_missing = df_cleaned[column_name].isnull().sum()
+    print(f"      └── Imputed {initial_missing} missing values with 0. Remaining missing values: {remaining_missing}")
 
     # Step 2: Add a new column to track the original currency type
     print(f"      └── Extracting currency type from {column_name} column...")
@@ -257,20 +256,24 @@ def clean_price_function(df_cleaned, column_name):
 
     # Step 5: Convert USD to SGD
     print(f"      └── Converting USD prices to SGD using an exchange rate of {exchange_rate}...")
-    df_cleaned[column_name] = df_cleaned.apply(
+    df_cleaned['price_in_sgd'] = df_cleaned.apply(
         lambda row: row[column_name] * exchange_rate if row['currency_type'] == 'USD' else row[column_name],
         axis=1
     )
 
-    # Step 6: Handle missing values (e.g., replace with 0)
-    print(f"      └── Replacing missing values in {column_name} column with 0...")
-    df_cleaned[column_name] = df_cleaned[column_name].fillna(0)
+    # Step 6: Handle missing values in the new column (e.g., replace with 0)
+    print(f"      └── Replacing missing values in price_in_sgd column with 0...")
+    df_cleaned['price_in_sgd'] = df_cleaned['price_in_sgd'].fillna(0)
 
-    # Step 7: Reorder columns to place 'currency_type' before 'price'
-    print(f"      └── Reordering columns to place 'currency_type' before {column_name}...")
+    # Step 7: Drop the original 'price' column
+    print(f"      └── Dropping the original '{column_name}' column...")
+    df_cleaned = df_cleaned.drop(columns=[column_name])
+
+    # Step 8: Reorder columns to place 'currency_type' before 'price_in_sgd'
+    print(f"      └── Reordering columns to place 'currency_type' before price_in_sgd...")
     cols = list(df_cleaned.columns)
-    column_index = cols.index(column_name)
-    cols.insert(column_index, 'currency_type')  # Insert 'currency_type' before 'price'
+    price_in_sgd_index = cols.index('price_in_sgd')
+    cols.insert(price_in_sgd_index, 'currency_type')  # Insert 'currency_type' before 'price_in_sgd'
 
     # Remove duplicate columns (if any) while preserving order
     cols = list(dict.fromkeys(cols))

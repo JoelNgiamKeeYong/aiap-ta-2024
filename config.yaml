@@ -13,6 +13,7 @@ target: "no_show" # Name of the target variable in the dataset. This is the vari
 # Data preprocessing configurations
 test_size: 0.2 # Proportion of the dataset to include in the test split (20%).
 random_state: 42 # Random seed for reproducibility across train-test splits.
+variance_threshold: 0.01 # asd
 
 # Model training configurations
 use_randomized_cv: False # To set True if running large array of parameters, then use False to use GridSearch CV to search

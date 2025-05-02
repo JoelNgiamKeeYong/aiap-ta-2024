@@ -23,7 +23,7 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 
 
-def evaluate_models(trained_models, X_train, X_test, y_train, y_test, output_dir="output"):
+def evaluate_models(trained_models, feature_names, X_train, X_test, y_train, y_test):
     """
     Evaluate a list of trained models and save evaluation results.
 
@@ -33,12 +33,14 @@ def evaluate_models(trained_models, X_train, X_test, y_train, y_test, output_dir
         X_test (pd.DataFrame or np.ndarray): Testing feature matrix.
         y_train (pd.Series or np.ndarray): Training target variable.
         y_test (pd.Series or np.ndarray): Testing target variable.
-        output_dir (str): Directory to save evaluation results.
 
     Returns:
         dict: Dictionary containing consolidated evaluation results.
     """
+    print(f"\n📊 Evaluating best models...")
+
     # Ensure the output directory exists
+    output_dir = 'output'
     os.makedirs(output_dir, exist_ok=True)
 
     # Lists to store results
@@ -47,17 +49,14 @@ def evaluate_models(trained_models, X_train, X_test, y_train, y_test, output_dir
     pr_data = []  # Precision-Recall curve data for all models
 
     # Loop through each trained model and evaluate
-    for model_name, best_model, training_time, model_size_kb in trained_models:
-        print(f"\n📊 Evaluating {model_name}...")
+    for i, (model_name, best_model, training_time, model_size_kb) in enumerate(trained_models):
+        print(f"\n   📋 Evaluating {model_name} model...")
         start_time = time.time()
-
-        # Get feature names from the preprocessor
-        feature_names = best_model.named_steps['preprocessor'].get_feature_names_out()
 
         # Calculate metrics
         train_metrics = calculate_metrics(best_model, X_train, y_train)
         test_metrics = calculate_metrics(best_model, X_test, y_test)
-        print(f"   └── Computing general evaluation metrics scores...")
+        print(f"      └── Computing general evaluation metrics scores...")
 
         # Process probability-based metrics
         roc_auc, pr_auc = process_probability_metrics(model_name, best_model, X_test, y_test, roc_data, pr_data)
@@ -79,19 +78,19 @@ def evaluate_models(trained_models, X_train, X_test, y_train, y_test, output_dir
         results.append(formatted_metrics)
 
         end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"\n✅ Evaluation completed in {elapsed_time:.2f} seconds!")
+        evaluation_time = end_time - start_time
+        print(f"      └── Evaluation completed in {evaluation_time:.2f} seconds!")
+
+        # Add evaluation_time to the trained_models list
+        trained_models[i] = (model_name, best_model, training_time, model_size_kb, evaluation_time)
 
     # Save consolidated results
     save_consolidated_metrics(results, output_dir)
     save_roc_curves(roc_data, output_dir)
     save_pr_curves(pr_data, output_dir)
+    print(f"\n💾 Saved evaluation metrics and charts to {output_dir} folder!")
 
-    return {
-        "results": results,
-        "roc_data": roc_data,
-        "pr_data": pr_data
-    }
+    return trained_models
 
 
 def calculate_metrics(model, X, y_true):
@@ -116,16 +115,16 @@ def process_probability_metrics(model_name, model, X_test, y_test, roc_data, pr_
         fpr, tpr, _ = roc_curve(y_test, y_test_probs)
         roc_auc = auc(fpr, tpr)
         roc_data.append({"Model": model_name, "FPR": fpr, "TPR": tpr, "AUC": roc_auc})
-        print(f"   └── Computing ROC AUC data...")
+        print(f"      └── Computing ROC AUC data...")
 
         # Compute Precision-Recall curve data
         precision, recall, _ = precision_recall_curve(y_test, y_test_probs)
         pr_auc = auc(recall, precision)
         pr_data.append({"Model": model_name, "Precision": precision, "Recall": recall, "AUC-PR": pr_auc})
-        print(f"   └── Computing Precision-Recall AUC data...")
+        print(f"      └── Computing Precision-Recall AUC data...")
 
     except AttributeError:
-        print(f"   └── ⚠️ Model {model_name} does not support `predict_proba`. Skipping ROC and PR curve generation.")
+        print(f"      └── ⚠️ Model {model_name} does not support `predict_proba`. Skipping ROC and PR curve generation.")
     
     return roc_auc, pr_auc
 
@@ -134,16 +133,16 @@ def process_feature_importance(model_name, best_model, X_train, y_train, feature
     """Extract and save feature importance scores."""
     try:
         # Check if the model has feature importances or coefficients
-        if hasattr(best_model.named_steps['model'], "coef_"):
+        if hasattr(best_model, "coef_"):
             # Logistic Regression
             feature_importances = pd.Series(
-                abs(best_model.named_steps['model'].coef_[0]),
+                abs(best_model.coef_[0]),
                 index=feature_names
             ).sort_values(ascending=False)
-        elif hasattr(best_model.named_steps['model'], "feature_importances_"):
+        elif hasattr(best_model, "feature_importances_"):
             # Tree-based models
             feature_importances = pd.Series(
-                best_model.named_steps['model'].feature_importances_,
+                best_model.feature_importances_,
                 index=feature_names
             ).sort_values(ascending=False)
         else:
@@ -157,29 +156,29 @@ def process_feature_importance(model_name, best_model, X_train, y_train, feature
             ).sort_values(ascending=False)
 
         # Save feature importance to a file
-        os.makedirs("output/feature_importance", exist_ok=True)
-        file_path = f"output/feature_importance/feature_importances_{model_name.replace(' ', '_').lower()}.txt"
+        os.makedirs(f"{output_dir}/feature_importance", exist_ok=True)
+        file_path = f"{output_dir}/feature_importance/feature_importances_{model_name.replace(' ', '_').lower()}.txt"
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(f"--- 📊 Feature Importance Scores for {model_name}:---\n")
             f.write(feature_importances.to_string())
-        print(f"   └── Computing and saving feature importance scores...")
+        print(f"      └── Computing and saving feature importance scores...")
 
     except Exception as e:
-        print(f"   └── ⚠️  Could not compute or save feature importance for {model_name}: {str(e)}")
+        print(f"      └── ⚠️  Could not compute or save feature importance for {model_name}: {str(e)}")
 
 
 def generate_confusion_matrix(model_name, model, X_test, y_test, output_dir):
     """Generate and save confusion matrix visualization."""
     try:
-        print(f"   └── Generating and plotting the confusion matrix...")
+        print(f"      └── Generating and plotting the confusion matrix...")
         cm = confusion_matrix(y_test, model.predict(X_test))
 
         # Normalize confusion matrix for visualization
         cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, None]
 
         # Save confusion matrix plot as PNG
-        os.makedirs("output/confusion_matrix", exist_ok=True)
-        png_filename = f"output/confusion_matrix/confusion_matrix_{model_name.replace(' ', '_').lower()}.png"
+        os.makedirs(f"{output_dir}/confusion_matrix", exist_ok=True)
+        png_filename = f"{output_dir}/confusion_matrix/confusion_matrix_{model_name.replace(' ', '_').lower()}.png"
         plt.figure(figsize=(8, 6))
         sns.heatmap(cm_normalized, annot=True, fmt='.2f', cmap='Blues', xticklabels=["No-Show", "Show"], yticklabels=["No-Show", "Show"])
         plt.ylabel('True Label', fontsize=12)
@@ -190,13 +189,13 @@ def generate_confusion_matrix(model_name, model, X_test, y_test, output_dir):
         plt.close()
         
     except Exception as e:
-        print(f"   ⚠️ Error occurred while computing or saving confusion matrix for {model_name}: {str(e)}")
+        print(f"      └── ⚠️ Error occurred while computing or saving confusion matrix for {model_name}: {str(e)}")
 
 
 def generate_learning_curves(model_name, model, X_train, y_train, output_dir):
     """Generate and save learning curves."""
     try:
-        print(f"   └── Generating and plotting learning curves...")
+        print(f"      └── Generating and plotting learning curves...")
         train_sizes = np.linspace(0.1, 1.0, 10)  # Define training sizes
         train_sizes, train_scores, test_scores = learning_curve(
             model, X_train, y_train,
@@ -225,19 +224,19 @@ def generate_learning_curves(model_name, model, X_train, y_train, output_dir):
         plt.tight_layout()
 
         # Save the learning curve plot
-        os.makedirs("output/learning_curves", exist_ok=True)
-        learning_curve_file_path = f"output/learning_curves/learning_curve_{model_name.replace(' ', '_').lower()}.png"
+        os.makedirs(f"{output_dir}/learning_curves", exist_ok=True)
+        learning_curve_file_path = f"{output_dir}/learning_curves/learning_curve_{model_name.replace(' ', '_').lower()}.png"
         plt.savefig(learning_curve_file_path, dpi=300, bbox_inches="tight")
         plt.close()
 
     except Exception as e:
-        print(f"   ⚠️ Error generating learning curves for {model_name}: {str(e)}")
+        print(f"      └── ⚠️ Error generating learning curves for {model_name}: {str(e)}")
 
 
 def generate_calibration_curve(model_name, model, X_test, y_test, output_dir):
     """Generate and save calibration curve."""
     try:
-        print(f"   └── Generating and plotting calibration curve...")
+        print(f"      └── Generating and plotting calibration curve...")
         prob_pos = model.predict_proba(X_test)[:, 1]
         fraction_of_positives, mean_predicted_value = calibration_curve(y_test, prob_pos, n_bins=10)
 
@@ -253,15 +252,15 @@ def generate_calibration_curve(model_name, model, X_test, y_test, output_dir):
         plt.tight_layout()
 
         # Save calibration curve plot
-        os.makedirs("output/calibration_curves", exist_ok=True)
-        calibration_curve_file_path = f"output/calibration_curves/calibration_curve_{model_name.replace(' ', '_').lower()}.png"
+        os.makedirs(f"{output_dir}/calibration_curves", exist_ok=True)
+        calibration_curve_file_path = f"{output_dir}/calibration_curves/calibration_curve_{model_name.replace(' ', '_').lower()}.png"
         plt.savefig(calibration_curve_file_path, dpi=300, bbox_inches="tight")
         plt.close()
 
     except AttributeError:
-        print(f"   └── ⚠️ Model {model_name} does not support `predict_proba`. Skipping calibration curve generation.")
+        print(f"      └── ⚠️ Model {model_name} does not support `predict_proba`. Skipping calibration curve generation.")
     except Exception as e:
-        print(f"   ⚠️ Error generating calibration curve for {model_name}: {str(e)}")
+        print(f"      └── ⚠️ Error generating calibration curve for {model_name}: {str(e)}")
 
 
 def format_metrics(model_name, train_metrics, test_metrics, roc_auc, pr_auc):
@@ -290,13 +289,12 @@ def save_consolidated_metrics(results, output_dir):
             floatfmt=".2f"
         )
         f.write(metrics_table + "\n\n")
-    print(f"\n💾 Saved consolidated evaluation metrics to {metrics_file_path}")
 
 
 def save_roc_curves(roc_data, output_dir):
     """Save combined ROC curves to file."""
     if not roc_data:
-        print("❌ No ROC data available to generate the curve.")
+        print("      └── ❌ No ROC data available to generate the curve.")
     else:
         combined_roc_file_path = f"{output_dir}/roc_curves_combined.png"
         plt.figure(figsize=(10, 8))
@@ -311,13 +309,12 @@ def save_roc_curves(roc_data, output_dir):
         plt.tight_layout()
         plt.savefig(combined_roc_file_path, dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"💾 Saved combined ROC curves to {combined_roc_file_path}")
 
 
 def save_pr_curves(pr_data, output_dir):
     """Save combined Precision-Recall curves to file."""
     if not pr_data:
-        print("❌ No Precision-Recall data available to generate the curve.")
+        print("      └── ❌ No Precision-Recall data available to generate the curve.")
     else:
         combined_pr_file_path = f"{output_dir}/pr_curves_combined.png"
         plt.figure(figsize=(10, 8))
@@ -331,7 +328,6 @@ def save_pr_curves(pr_data, output_dir):
         plt.tight_layout()
         plt.savefig(combined_pr_file_path, dpi=300, bbox_inches="tight")
         plt.close()
-        print(f"💾 Saved combined Precision-Recall curves to {combined_pr_file_path}")
 
 
 def compute_metrics(model, X, y_true):

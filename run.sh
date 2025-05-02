@@ -53,10 +53,23 @@ if [ ! -f "$SAVE_PATH" ]; then
     fi
 fi
 
-# Run the machine learning pipeline with configurable parameters
-echo "🚀🚀🚀 Running the machine learning pipeline..."
-echo
-python src/pipeline.py
+# Parse optional arguments
+if [[ "$1" == "--lite" ]]; then
+    echo "🚀🚀💡 Running pipeline in in Lite Mode... (<1 min)"
+    echo
+    python src/pipeline.py --lite
+else
+    # Run the full machine learning pipeline with configurable parameters
+    echo "🚀🚀🚀 Running the machine learning pipeline... (~5 min)"
+    echo
+    python src/pipeline.py 
+fi
+
+# Handle unknown arguments (if any)
+if [[ $# -gt 0 && "$1" != "--lite" ]]; then
+    echo "❌ Unknown argument: $1"
+    exit 1
+fi
 
 # Check if the pipeline executed successfully
 if [ $? -eq 0 ]; then
