@@ -58,17 +58,15 @@ if [[ "$1" == "--lite" ]]; then
     echo "🚀🚀💡 Running pipeline in in Lite Mode... (<1 min)"
     echo
     python src/pipeline.py --lite
+elif [[ $# -gt 0 ]]; then
+    # Unknown argument
+    echo "❌ Unknown argument: $1"
+    exit 1
 else
     # Run the full machine learning pipeline with configurable parameters
     echo "🚀🚀🚀 Running the machine learning pipeline... (~5 min)"
     echo
     python src/pipeline.py 
-fi
-
-# Handle unknown arguments (if any)
-if [[ $# -gt 0 && "$1" != "--lite" ]]; then
-    echo "❌ Unknown argument: $1"
-    exit 1
 fi
 
 # Check if the pipeline executed successfully

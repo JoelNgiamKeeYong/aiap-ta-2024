@@ -37,33 +37,12 @@ def preprocess_data(
         print("\n🔧 Preprocessing the dataset...")
         start_time = time.time()
 
-        # Carry out additional cleaning
-        print("\n   ⚙️  Carrying out additional dataset cleaning...")
-        df_preprocessed = impute_missing_values_price_in_sgd(df=df_cleaned)
-        df_preprocessed = remove_outliers_price_in_sgd(df=df_preprocessed)
-        df_preprocessed = remove_missing_values_room(df=df_preprocessed)
-
-        # Create new features
-        print("\n   ⚙️  Creating new features via feature engineering...")
-        df_preprocessed = create_months_to_arrival_feature(df=df_preprocessed)
-        df_preprocessed = create_stay_duration_days_feature(df=df_preprocessed)
-        df_preprocessed = create_stay_category_feature(df=df_preprocessed)
-        df_preprocessed = create_has_children_feature(df=df_preprocessed)
-        df_preprocessed = create_total_pax_feature(df=df_preprocessed)
-
-        # Dropping irrelevant features
-        print("\n   ⚙️  Dropping irrelevant features...")
-        features_to_drop = ["arrival_day", "checkout_day", "stay_duration_days","num_children"]
-        df_preprocessed = df_preprocessed.drop(columns=features_to_drop, errors='ignore')
-        print(f"      └── Dropped irrelevant features: {features_to_drop}")
-
-        # Separate features and target
+        # Separate features (X) and target (y)
         print("\n   ⚙️  Separating the features and the target...")
-        y = df_preprocessed[target]  # Target variable
-        X = df_preprocessed.drop(columns=[target])  # Feature matrix
+        y = df_cleaned[target]  # Target variable
+        X = df_cleaned.drop(columns=[target])  # Feature matrix
 
         # Split the data into training and testing sets
-        # Do this here so that all further processing below will only use the training data for its transormations
         print("   ⚙️  Splitting the data into training and testing sets...")
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, 
@@ -71,14 +50,65 @@ def preprocess_data(
             test_size=test_size,         # Set in the config.yaml
             random_state=random_state    # To ensure reproducibility as per EDA
         )
+        df_train = pd.concat([X_train, y_train], axis=1)  # Combine X_train and y_train into a single DataFrame
+        df_test = pd.concat([X_test, y_test], axis=1)  # Combine X_test and y_test into a single DataFrame
 
+        # Carry out additional cleaning
+        print("   ⚙️  Carrying out additional dataset cleaning...")
+        print(f"\n      └── Cleaning training set...")
+        df_train = impute_missing_values_price_in_sgd(df=df_train)
+        df_train = remove_outliers_price_in_sgd(df=df_train)
+        df_train = remove_missing_values_room(df=df_train)
+        print(f"\n      └── Cleaning test set...")
+        df_test = impute_missing_values_price_in_sgd(df=df_test)
+        df_test = remove_outliers_price_in_sgd(df=df_test)
+        df_test = remove_missing_values_room(df=df_test)
+
+        # Create new features
+        print("\n   ⚙️  Creating new features via feature engineering...")
+        print(f"\n      └── Engineering features in training set...")
+        df_train = create_months_to_arrival_feature(df=df_train)
+        df_train = create_stay_duration_days_feature(df=df_train)
+        df_train = create_stay_category_feature(df=df_train)
+        df_train = create_has_children_feature(df=df_train)
+        df_train = create_total_pax_feature(df=df_train)
+        print(f"\n      └── Engineering features in test set...")
+        df_test = create_months_to_arrival_feature(df=df_test)
+        df_test = create_stay_duration_days_feature(df=df_test)
+        df_test = create_stay_category_feature(df=df_test)
+        df_test = create_has_children_feature(df=df_test)
+        df_test = create_total_pax_feature(df=df_test)
+
+        # Dropping irrelevant features
+        print("\n   ⚙️  Dropping irrelevant features...")
+        features_to_drop = ["arrival_day", "checkout_day", "stay_duration_days","num_children"]
+        print("      └── Dropping features in training set...")
+        df_train = df_train.drop(columns=features_to_drop, errors='ignore')
+        print("      └── Dropping features in test set...")
+        df_test = df_test.drop(columns=features_to_drop, errors='ignore')
+        print(f"      └── Dropped irrelevant features: {features_to_drop}")
+
+        # Checking data integrity after partial preprocessing
+        print("\n   ⚙️  Checking data integrity after preprocessing...")
+        print(f"      └── Training set shape: {df_train.shape} ...")
+        print(f"      └── Test set shape: {df_test.shape} ...")
+        total_rows = df_train.shape[0] + df_test.shape[0]
+        test_ratio = (df_test.shape[0] / total_rows) * 100
+        print(f"      └── Test set constitutes {test_ratio:.2f}% of the total dataset. Original split: {(test_size*100):.2f}%")
+
+        # Separate features (X) and target (y) after partial preprocessing
+        X_train = df_train.drop(columns=[target])
+        y_train = df_train[target] 
+        X_test = df_test.drop(columns=[target])
+        y_test = df_test[target] 
+        
         # Define numerical and categorical features
-        print("   ⚙️  Defining numerical and categorical features...")
-        numerical_features = X.select_dtypes(include=['number']).columns.tolist()
-        categorical_features = X.select_dtypes(include=['object', 'category']).columns.tolist()
+        print("\n   ⚙️  Defining numerical and categorical features...")
+        numerical_features = X_train.select_dtypes(include=['number']).columns.tolist()
+        categorical_features = X_train.select_dtypes(include=['object', 'category']).columns.tolist()
 
         # Apply feature scaling and encoding
-        print("\n   ⚙️  Applyingg feature scaling and encoding...")
+        print("   ⚙️  Applying feature scaling and encoding...")
         print("      └── Defining the feature transformer pipeline...")
         print("      └── Standard scaler for numerical features...")
         print("      └── One hot encoder for categorical features...")

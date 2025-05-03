@@ -1,8 +1,6 @@
 # src/pipeline.py
 # This script orchestrates the entire pipeline for the project.
 
-# Use a sequential processing methodology for the pipeline (i.e. executing tasks in a linear order, one after the another). Each stage depends on the output of the last stage --> straightfoward and predictable workflow. Intuitive and easier to debug since one task is completed before the next. Since our dataset is smaller it is okay. For future, may consider using parallel processing for larger scale projects due to increased complexity. However, requires more careful orchestration to ensure data dependencies are adequately managed. Better optimization of resources. Essential for big data applications.
-
 import os
 import time
 import math

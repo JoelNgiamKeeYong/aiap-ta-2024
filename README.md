@@ -7,15 +7,33 @@
 - Full Name: **Joel Ngiam Kee Yong**
 - Email: [joelngiam@yahoo.com.sg](joelngiam@yahoo.com.sg)
 
-## Problem Statement
+## 🎯 Problem Statement
 
-asdadas
+The objective of this project is to predict customer no-shows for a hotel chain using the provided dataset. A no-show occurs when a customer makes a booking but does not arrive at the hotel as planned, leading to revenue loss and operational inefficiencies for the hotel.
 
-## 🌐 Overview
+To address this issue, the project aims to:
 
-This project predicts hotel no-shows using a modular and configurable machine learning pipeline. The pipeline is designed to be **reusable**, **interpretable**, and **scalable** for experimentation with different models and preprocessing steps.
+1. Evaluate at least three machine learning models suitable for predicting no-shows.
 
-Folder Structure:
+2. Identify key factors contributing to no-show behavior through exploratory data analysis (EDA) and feature engineering.
+
+3. Formulate actionable insights and recommendations that can help the hotel chain reduce expenses incurred due to no-shows, such as optimizing resource allocation, adjusting pricing strategies, or implementing targeted interventions.
+
+By accurately predicting no-shows, this project seeks to empower the hotel chain to implement data-driven policies that minimize losses and improve operational efficiency.
+
+## 🌐 Project Overview
+
+This project aims to predict customer no-shows for a hotel chain using a modular, configurable, and reproducible machine learning pipeline. The objective is to help the hotel chain formulate data-driven policies to reduce expenses incurred due to no-shows.
+
+The solution includes:
+
+- **Exploratory Data Analysis (EDA)**: A detailed analysis of the dataset to uncover patterns, trends, and insights that influence no-show behavior.
+
+- **End-to-End Machine Learning Pipeline (ML Pipeline)**: A fully automated machine learning pipeline that preprocesses the data, trains multiple models, evaluates their performance, and generates actionable reports.
+
+The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory**, enabling easy experimentation with different models, preprocessing steps, and hyperparameters.
+
+**Folder Structure:**
 
 ```
 ├── archives/              # Folder for inactive files and logs
@@ -45,14 +63,14 @@ Folder Structure:
 
 2. [Optional] Manually download and place the dataset file into the `data/` folder. The following step does this automatically. Link for download: [https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db](https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db)
 
-3. Run the ML pipeline by executing the bash script
+3. Run the ML pipeline by executing either of the following bash scripts
 
    ```bash
-   bash run.sh  # Run the full ML pipeline
-   bash run.sh --lite  # Run the pipeline in lite mode, for quick debugging of pipeline
+   bash run.sh            # Run the full ML pipeline
+   bash run.sh --lite     # Run the pipeline in lite mode, for quick debugging of the pipeline
    ```
 
-4. Experiment with the ML pipeline by modifying the configuration in `config.yaml`
+4. Experiment with the ML pipeline by modifying the configuration in `config.yaml` and `/src` files
 
 5. [Optional] Reset the project
 
@@ -60,18 +78,97 @@ Folder Structure:
    bash reset.sh
    ```
 
-## 🏭 Pipeline Flow
+## 🔎 EDA Workflow & Findings
 
-The pipeline consists of the following logical steps:
+The Exploratory Data Analysis (EDA) process is designed to systematically understand the dataset, identify patterns, and prepare the data for machine learning modeling. Instead of isolating univariate, bivariate, and multivariate analyses into separate sections, the EDA workflow is integrated into broader, purpose-driven stages that reflect the iterative nature of data exploration. Below is a detailed breakdown of the EDA workflow:
 
-1. Data Loading : Load data from data/noshow.db using SQLite.
-2. Data Cleaning : Handle missing values, duplicates, and inconsistencies.
+<div style="margin-bottom: 20px;">
+    <img src="assets/eda_workflow.png" alt="EDA Workflow" width="80%">
+</div>
 
-Train Test Split
+For a detailed walkthrough of the EDA and its workflow, please refer to the `eda.ipynb` notebook.
+
+**Key EDA Findings:**
+
+**1. Target Variable Distribution:**
+
+- The dataset exhibits class imbalance, with approximately X% of customers being no-shows.
+- This imbalance was addressed during model evaluation by prioritizing metrics like precision, recall, and F1-score over accuracy.
+
+**2. Outliers and Missing Values:**
+
+- A small percentage of missing values were identified in certain features and handled using imputation techniques.
+- Outliers in numerical features like `price` were analyzed but retained unless they distorted model performance.
+
+**3. Synthetic Features:**
+
+- Derived features such as `stay_duration` (calculated as the difference between `checkout_date` and `arrival_date`) and `booking_to_arrival_time` (calculated as the difference between `booking_month` and `arrival_month`) improved model interpretability and performance.
+
+**4. Key Predictors of No-Shows:**
+
+- Features such as `booking_to_arrival_time`, `stay_duration`, and `platform` were found to have strong correlations with the target variable (`no_show`).
+- Categorical features like `branch` and `room` also showed significant differences in no-show rates across categories.
+
+**5. Feature Relationships:**
+
+- Multivariate analysis revealed interactions between features.
+- For example, customers who booked closer to their arrival date (`booking_to_arrival_time`) and stayed longer (`stay_duration`) were more likely to show up.
+
+**6. Actionable Insights:**
+
+- Customers booking through specific platforms or during certain months exhibited higher no-show rates.
+- These insights can guide targeted interventions, such as offering discounts or reminders to reduce no-shows.
+
+These findings informed the preprocessing steps, feature engineering, and model selection in the pipeline.
+
+## 🏭 Pipeline Design
+
+The machine learning pipeline employs a **sequential processing** methodology, where tasks are executed in a linear order, with each stage depending on the output of the previous one. This approach ensures a straightforward and predictable workflow, making the pipeline intuitive to follow and easier to debug. By completing one task before moving to the next, we maintain a clear and logical progression throughout the pipeline.
+
+Given the relatively small size of the dataset, sequential processing is sufficient and computationally efficient. However, for larger-scale projects or big data applications, **parallel processing** could be considered to optimize resource utilization and reduce execution time. While parallel processing offers performance benefits, it introduces additional complexity, requiring careful orchestration to manage data dependencies effectively.
+
+Below is a detailed breakdown of the steps in the pipeline:
+
+<div style="margin-bottom: 20px;">
+    <img src="assets/pipeline_workflow.png" alt="Pipeline Workflow" width="80%">
+</div>
+
+The machine learning pipeline is designed to be **modular**, **interpretable**, and **scalable**, enabling easy experimentation with different models, preprocessing steps, and hyperparameters. Below is a detailed breakdown of the logical steps involved in the pipeline:
+
+**1. 📥 Data Loading:**
+
+- Load the dataset from data/noshow.db using SQLite.
+- Ensure reproducibility and flexibility by providing an option to download the dataset automatically if it’s not present.
+
+**2. 🧼 Data Cleaning:**
+
+- Handle missing values, duplicates, and inconsistencies.
+- Remove irrelevant features (e.g., booking_id) that do not contribute to predicting no-show behavior.
+
+**3. 🔧 Data Preprocessing:**
+
+- Similar to the EDA, we will split first after cleaning. This ensures that with the same configurations and random state for the train_test_split will result in the same training and testing sets from the EDA. This ensures that EDA done on the training set will also result in the same train and test sets in the pipeline. By splitting the data first, we avoid inadvertently incorporating information from the test set into decisions like row removal, imputation, or feature scaling, which could otherwise lead to overly optimistic performance metrics and a model that fails to generalize in production. While this may slightly alter the intended train-test ratio if rows are removed disproportionately, monitoring the final dataset sizes and revisiting preprocessing strategies (e.g., using imputation instead of dropping rows) can mitigate such concerns
+- Train-Test Split: Since imbalanced dataset, Perform a stratified train-test split to preserve the proportion of classes in the target variable (no_show).
+- Use a 20% test size to balance the amount of data available for training and evaluation.
+- Advanced Cleaning :
+- Impute missing values and remove outliers based on the information derived from EDA on the training set only.
+- Feature Engineering :
+- Derive synthetic features (e.g., stay_duration, booking_to_arrival_time).
+- Encode categorical variables and normalize numerical features.
+
+**4. 🤖 Model Training:**
+
+- Train multiple models (e.g., Logistic Regression, Random Forest, XGBoost).
+- Use GridSearchCV for hyperparameter tuning, with an option to switch to RandomizedSearchCV via the config.yaml file.
+
+**5. 📊 Model Evaluation:**
+
+- Evaluate models using metrics such as Accuracy, Precision, Recall, F1-Score, and ROC-AUC.
+- Generate visualizations (e.g., ROC curves, Precision-Recall curves, confusion matrices).
+
+This pipeline ensures data integrity, avoids data leakage, and provides a robust foundation for building a predictive model for hotel no-show prediction.
 
 You should perform the train-test split before feature engineering to prevent data leakage and ensure that your model evaluation is unbiased. This approach aligns with best practices in machine learning and will help you build a robust and reliable predictive model for your hotel no-show prediction task. As we are building a predictive model and want to test on unseen data, to mimic production next time, we should split it before extensive EDA, so that when we evaluate the model, we can evaluate it on the unseen test data set. However, this may mean that some information from the test set may not be captured in the model. Despite this, a model that performs well on unseen data is more valuable than one that perfectly fits the training data but fails in production.
-
-A stratified split ensures that the proportion of classes in the target variable (y) is preserved in both the training and testing sets. This is particularly useful for imbalanced datasets.
 
 Used 20% train test split, so sufficient data in training and testing. Also need quite a bit for training as we doing cross-validation as well
 
@@ -81,23 +178,7 @@ Why use normalisation or min-max scaler
 
 Why never apply oversampling / undersampling
 
-3. Feature Engineering : Preprocess features (e.g., encode categorical variables, normalize numerical features).
-4. Model Training : Train multiple models (e.g., Logistic Regression, Random Forest, XGBoost).
-5. Model Evaluation : Evaluate models using metrics such as Accuracy, Precision, Recall, F1-Score, and ROC-AUC.
-
-## 🔎 EDA Findings
-
-- EDA is carried out in the following process:
-
-[Insert-image]
-
-- Rather than dedicating separate sections to univariate, bivariate, and multivariate analyses, I have integrated these tools into broader, purpose-driven sections within the exploratory data analysis (EDA) pipeline. This approach reflects the iterative nature of EDA—univariate analysis might identify missing values or outliers during data cleaning, while later revisiting it after feature engineering to validate new features. Organizing the analysis into sections like data cleaning. comprehensive exploration and feature engineering ensures a logical, coherent workflow that aligns with the progression of an end-to-end machine learning pipeline.
-
-- This structure avoids redundancy and enhances clarity by focusing on practical outcomes, such as improving model performance or addressing business needs. Readers can easily follow the progression of the analysis, as each section has a clear purpose, demonstrating both depth and rigor without unnecessary repetition.
-
-- High no-show rates in certain `booking_month`s; influenced pipeline feature selection.
-
-## 🛠️ Feature Processing
+## 🛠️ Feature Processing Summary
 
 | Feature          | Source     | Processing                   |
 | ---------------- | ---------- | ---------------------------- |
