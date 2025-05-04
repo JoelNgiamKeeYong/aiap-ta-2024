@@ -25,15 +25,15 @@ By accurately predicting no-shows, this project seeks to empower the hotel chain
 
 This project aims to predict customer no-shows for a hotel chain using a modular, configurable, and reproducible machine learning pipeline. The objective is to help the hotel chain formulate data-driven policies to reduce expenses incurred due to no-shows.
 
-The solution includes:
+The project includes:
 
-- **Exploratory Data Analysis (EDA)**: A detailed analysis of the dataset to uncover patterns, trends, and insights that influence no-show behavior.
+- **Exploratory Data Analysis (EDA) 🔎📊🧩**: A detailed analysis of the dataset to uncover patterns, trends, and insights that influence no-show behavior.
 
-- **End-to-End Machine Learning Pipeline (ML Pipeline)**: A fully automated machine learning pipeline that preprocesses the data, trains multiple models, evaluates their performance, and generates actionable reports.
+- **End-to-End Machine Learning Pipeline (ML Pipeline) 🏭🤖🔮**: A fully automated machine learning pipeline that preprocesses the data, trains multiple models, evaluates their performance, and generates actionable reports.
 
 The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory**, enabling easy experimentation with different models, preprocessing steps, and hyperparameters.
 
-**Folder Structure:**
+### Folder Structure:
 
 ```
 ├── archives/              # Folder for inactive files and logs
@@ -80,7 +80,7 @@ The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory
 
 ## 🔎 EDA Workflow & Findings
 
-The Exploratory Data Analysis (EDA) process is designed to systematically understand the dataset, identify patterns, and prepare the data for machine learning modeling. Instead of isolating univariate, bivariate, and multivariate analyses into separate sections, the EDA workflow is integrated into broader, purpose-driven stages that reflect the iterative nature of data exploration. Below is a detailed breakdown of the EDA workflow:
+The Exploratory Data Analysis (EDA) process is designed to systematically understand the dataset, identify patterns, and inform subsequent steps such as feature engineering and model selection in the ML pipeline. Instead of isolating univariate, bivariate, and multivariate analyses into separate sections, the EDA workflow is integrated into broader, purpose-driven stages that reflect the iterative nature of data exploration. Below is a visual representation that illustrates the key stages of the EDA workflow:
 
 <div style="margin-bottom: 20px;">
     <img src="assets/eda_workflow.png" alt="EDA Workflow" width="80%">
@@ -88,33 +88,35 @@ The Exploratory Data Analysis (EDA) process is designed to systematically unders
 
 For a detailed walkthrough of the EDA and its workflow, please refer to the `eda.ipynb` notebook.
 
-**Key EDA Findings:**
+Below is a brief summary of the most significant insights and key findings from the EDA:
 
-**1. Target Variable Distribution:**
+**🔎 Target Variable Distribution:**
 
 - The dataset exhibits class imbalance, with approximately X% of customers being no-shows.
 - This imbalance was addressed during model evaluation by prioritizing metrics like precision, recall, and F1-score over accuracy.
 
-**2. Outliers and Missing Values:**
+**🔎 Features Distributions:**
+
+- asda
+- asd
+
+**🔎 Data Quality Issues:**
 
 - A small percentage of missing values were identified in certain features and handled using imputation techniques.
 - Outliers in numerical features like `price` were analyzed but retained unless they distorted model performance.
+- Accuracy, completeness, consistency, relevance, validity
 
-**3. Synthetic Features:**
-
-- Derived features such as `stay_duration` (calculated as the difference between `checkout_date` and `arrival_date`) and `booking_to_arrival_time` (calculated as the difference between `booking_month` and `arrival_month`) improved model interpretability and performance.
-
-**4. Key Predictors of No-Shows:**
+**🔎 Key Predictors of No-Shows:**
 
 - Features such as `booking_to_arrival_time`, `stay_duration`, and `platform` were found to have strong correlations with the target variable (`no_show`).
 - Categorical features like `branch` and `room` also showed significant differences in no-show rates across categories.
 
-**5. Feature Relationships:**
+**🔎 Feature Relationships:**
 
 - Multivariate analysis revealed interactions between features.
 - For example, customers who booked closer to their arrival date (`booking_to_arrival_time`) and stayed longer (`stay_duration`) were more likely to show up.
 
-**6. Actionable Insights:**
+**🔎 Actionable Insights:**
 
 - Customers booking through specific platforms or during certain months exhibited higher no-show rates.
 - These insights can guide targeted interventions, such as offering discounts or reminders to reduce no-shows.
@@ -127,7 +129,7 @@ The machine learning pipeline employs a **sequential processing** methodology, w
 
 Given the relatively small size of the dataset, sequential processing is sufficient and computationally efficient. However, for larger-scale projects or big data applications, **parallel processing** could be considered to optimize resource utilization and reduce execution time. While parallel processing offers performance benefits, it introduces additional complexity, requiring careful orchestration to manage data dependencies effectively.
 
-Below is a detailed breakdown of the steps in the pipeline:
+Below is a illustrative representation of the steps in the pipeline:
 
 <div style="margin-bottom: 20px;">
     <img src="assets/pipeline_workflow.png" alt="Pipeline Workflow" width="80%">
@@ -135,82 +137,74 @@ Below is a detailed breakdown of the steps in the pipeline:
 
 The machine learning pipeline is designed to be **modular**, **interpretable**, and **scalable**, enabling easy experimentation with different models, preprocessing steps, and hyperparameters. Below is a detailed breakdown of the logical steps involved in the pipeline:
 
-**1. 📥 Data Loading:**
+### 1. 📥 Data Loading:
 
-- Load the dataset from data/noshow.db using SQLite.
-- Ensure reproducibility and flexibility by providing an option to download the dataset automatically if it’s not present.
+- Load the dataset from `data/noshow.db` using SQLite and convert it into a Pandas DataFrame.
+- Validate the database path and ensure the required table exists to prevent runtime errors.
+- Automate data retrieval to make the pipeline self-contained and executable without manual intervention.
 
-**2. 🧼 Data Cleaning:**
+### 2. 🧼 Data Cleaning:
 
-- Handle missing values, duplicates, and inconsistencies.
-- Remove irrelevant features (e.g., booking_id) that do not contribute to predicting no-show behavior.
+- Validate data integrity by checking and addressing for duplicates and inconsistencies.
+- Remove irrelevant features that do not contribute to predicting no-show behavior.
+- Ensure all columns have appropriate data types to prevent preprocessing and modeling issues.
+- Convert categorical columns to a consistent format (e.g., `category` dtype) for memory efficiency.
+- Handle missing values by imputing placeholders and later addressing them during data preprocessing with information from training set only.
+- Resolve data issues and identify systemic problems to provide feedback to the operational team for future improvements.
 
-**3. 🔧 Data Preprocessing:**
+### 3. 🔧 Data Preprocessing:
 
-- Similar to the EDA, we will split first after cleaning. This ensures that with the same configurations and random state for the train_test_split will result in the same training and testing sets from the EDA. This ensures that EDA done on the training set will also result in the same train and test sets in the pipeline. By splitting the data first, we avoid inadvertently incorporating information from the test set into decisions like row removal, imputation, or feature scaling, which could otherwise lead to overly optimistic performance metrics and a model that fails to generalize in production. While this may slightly alter the intended train-test ratio if rows are removed disproportionately, monitoring the final dataset sizes and revisiting preprocessing strategies (e.g., using imputation instead of dropping rows) can mitigate such concerns
-- Train-Test Split: Since imbalanced dataset, Perform a stratified train-test split to preserve the proportion of classes in the target variable (no_show).
-- Use a 20% test size to balance the amount of data available for training and evaluation.
-- Advanced Cleaning :
-- Impute missing values and remove outliers based on the information derived from EDA on the training set only.
-- Feature Engineering :
-- Derive synthetic features (e.g., stay_duration, booking_to_arrival_time).
-- Encode categorical variables and normalize numerical features.
+- Split the data early using a stratified train-test split to preserve the class distribution of the target variable, ensuring both sets are representative of the imbalanced dataset.
+- Use an 80%-20% split to allocate sufficient data for training and evaluation while maintaining robustness.
+- Perform advanced cleaning steps, including imputing missing values, removing outliers, and addressing inconsistencies based on insights from the training set only during EDA.
+- Conduct feature engineering to create new, meaningful features and transform existing ones, enhancing interpretability and predictive power (e.g., deriving domain-specific synthetic features).
+- Normalize numerical features using standard scaling to improve performance for gradient-based models and ensure consistent feature ranges.
+- Encode categorical variables using techniques like One-Hot Encoding to ensure compatibility with machine learning algorithms.
+- Perform feature selectiong using various techniques and remove features with excessive noise, irrelevance, or low variance to improve model efficiency and performance.
 
-**4. 🤖 Model Training:**
+### 4. 🤖 Model Training:
 
-- Train multiple models (e.g., Logistic Regression, Random Forest, XGBoost).
-- Use GridSearchCV for hyperparameter tuning, with an option to switch to RandomizedSearchCV via the config.yaml file.
+- Train multiple machine learning models to identify the best-performing algorithm for the no-show prediction task.
+- Perform hyperparameter tuning using `GridSearchCV` to exhaustively search through specified parameter grids and find the optimal configuration for each model.
+- Optionally switch to `RandomizedSearchCV` via the `config.yaml` file for faster exploration of hyperparameter spaces, especially when computational resources are limited.
+- Save the best-trained models along with their training time and size for comparison and future use.
 
-**5. 📊 Model Evaluation:**
+### 5. 📊 Model Evaluation:
 
-- Evaluate models using metrics such as Accuracy, Precision, Recall, F1-Score, and ROC-AUC.
-- Generate visualizations (e.g., ROC curves, Precision-Recall curves, confusion matrices).
-
-This pipeline ensures data integrity, avoids data leakage, and provides a robust foundation for building a predictive model for hotel no-show prediction.
-
-You should perform the train-test split before feature engineering to prevent data leakage and ensure that your model evaluation is unbiased. This approach aligns with best practices in machine learning and will help you build a robust and reliable predictive model for your hotel no-show prediction task. As we are building a predictive model and want to test on unseen data, to mimic production next time, we should split it before extensive EDA, so that when we evaluate the model, we can evaluate it on the unseen test data set. However, this may mean that some information from the test set may not be captured in the model. Despite this, a model that performs well on unseen data is more valuable than one that perfectly fits the training data but fails in production.
-
-Used 20% train test split, so sufficient data in training and testing. Also need quite a bit for training as we doing cross-validation as well
-
-Use grid search CV (instead of randomized search cv, why?) --> Do option to change randomized search to grid search in config, as randomized search more computationally efficient and use it first to run multiple runs to see what is the best and exploring what are the best parameters, then use grid search to fine tune
-
-Why use normalisation or min-max scaler
-
-Why never apply oversampling / undersampling
+- Assess models on the test set to simulate real-world performance on unseen data, ensuring reliable generalization.
+- Evaluate model performance using a combination of metrics and visualizations to ensure a comprehensive understanding of strengths and weaknesses.
+- Use cross-validation during training to enhance robustness and minimize overfitting.
+- Save evaluation results and visualizations to a dedicated output directory for easy review and comparison.
 
 ## 🛠️ Feature Processing Summary
 
-| Feature          | Source     | Processing                   |
-| ---------------- | ---------- | ---------------------------- |
-| `booking_id`     | Original   | Dropped                      |
-| `no_show`        | Original   | Target, unchanged            |
-| `branch`         | Original   | Converted to `category` type |
-| `booking_month`  | Original   | Converted to `int` type      |
-| `arrival_month`  | Original   | Converted to int             |
-| `arrival_day`    | Original   | Converted to int             |
-| `checkout_month` | Original   | Converted to int             |
-| `checkout_day`   | Original   | Converted to int             |
-| `country`        | Original   | One-hot encoded              |
-| `first_time`     | Original   | One-hot encoded              |
-| `room`           | Original   | One-hot encoded              |
-| `price`          | Original   | Normalized                   |
-| `platform`       | Original   | One-hot encoded              |
-| `num_adults`     | Original   | One-hot encoded              |
-| `num_children`   | Original   | One-hot encoded              |
-| `currency_type`  | Engineered | One-hot encoded              |
+The following table summarizes how each feature in the dataset was processed to prepare it for machine learning modeling. These transformations aim to improve model performance, ensure compatibility with algorithms, and reduce noise while preserving meaningful patterns in the data.
 
-Why use Standard Scaler over MinMax Scaler
-Why use OneHotEncoding over Ordinal Encoder
-
-Why never use sklearn pipeline function to combine preprocessing and training? Instead using separate functions
-
-Why use GridSearch CV and not Randomized Search?
+| Category    | Feature          | Source     | Processing                   | Rationale |
+| ----------- | ---------------- | ---------- | ---------------------------- | --------- |
+| Identifiers | `booking_id`     | Original   | ❌ Dropped                   |           |
+| Target      | `no_show` ⭐     | Original   | Unchanged                    |           |
+| Categorical | `branch`         | Original   | Converted to `category` type |           |
+|             | `booking_month`  | Original   | Converted to `int` type      |
+|             | `arrival_month`  | Original   | Converted to int             |
+|             | `arrival_day`    | Original   | Converted to int             |
+|             | `checkout_month` | Original   | Converted to int             |
+|             | `checkout_day`   | Original   | Converted to int             |
+|             | `country`        | Original   | One-hot encoded              |
+|             | `first_time`     | Original   | One-hot encoded              |
+|             | `room`           | Original   | One-hot encoded              |
+|             | `platform`       | Original   | One-hot encoded              |
+|             | `currency_type`  | 🆕         | One-hot encoded              |
+| Numerical   | `price_in_sgd`   | Engineered | Normalized                   |
+|             | `price`          | Original   | Dropped                      |
+|             | `num_adults`     | Original   | One-hot encoded              |
+|             | `num_children`   | Original   | One-hot encoded              |
 
 ## 🤖 Candidate Models
 
 The selection of machine learning models for predicting customer no-shows was guided by the following key considerations:
 
-**Nature of the Dataset**:
+### **🤖 Nature of the Dataset**:
 
 - **Structured/Tabular Data**: The dataset consists of structured/tabular data with a mix of numerical, categorical, and ordinal features. Tree-based models such as **XGBoost**, **Random Forest**, and **LightGBM** are highly effective for such datasets due to their ability to handle mixed data types and capture complex relationships.
 
@@ -218,7 +212,7 @@ The selection of machine learning models for predicting customer no-shows was gu
 
 - **Dataset Size**: With over 70,000 records, scalability is crucial. Models like **XGBoost** and **LightGBM** are optimized for large datasets and can efficiently handle high-dimensional data.
 
-**Selected Models**:
+### **🤖 Selected Models**:
 
 - **Logistic Regression**: Logistic Regression is a simple and interpretable model that works well for binary classification problems. It is computationally efficient and scales well with large datasets and provides a baseline performance to compare against more complex models. Additionally, feature importance can be derived from the coefficients, which helps in understanding the impact of each feature on the target variable.
 
@@ -228,21 +222,32 @@ The selection of machine learning models for predicting customer no-shows was gu
 
 - **LightGBM**: LightGBM is another gradient boosting framework that is optimized for speed and memory efficiency, especially on large datasets. It uses novel techniques such as Gradient-based One-Side Sampling (GOSS) and Exclusive Feature Bundling (EFB) to reduce training time without sacrificing accuracy. LightGBM handles categorical features natively and efficiently manages large datasets with millions of rows and high-dimensional feature spaces. Like XGBoost, it supports regularization (L1/L2 penalties) to prevent overfitting and provides feature importance scores and SHAP values for interpretability. LightGBM is often faster than XGBoost due to its histogram-based approach and optimized tree construction. However, like other advanced models, it is slightly less interpretable than Logistic Regression.
 
-**Why not other models?**:
+### **🤖 Why not other models?**:
 
-- **Neural Networks**: Neural networks are not ideal for this type of structured/tabular data unless the dataset has complex patterns or unstructured components, such as text or images. For this problem, simpler models like XGBoost and LightGBM will likely outperform neural networks with less computational overhead.
+- **Neural Networks**: Neural networks are less suitable for structured/tabular data, especially when simpler models like XGBoost and LightGBM already deliver strong performance with lower computational costs. They excel in scenarios involving unstructured data (e.g., text, images) or highly complex patterns, which this dataset does not exhibit. Additionally, neural networks demand significantly more computational resources and time, creating an opportunity cost: the same resources could be allocated to faster, interpretable models that achieve comparable or better results. Given the excellent performance of tree-based models here (see below), neural networks are unnecessary and inefficient for this task.
 
 - **Support Vector Machines (SVM)**: SVMs are computationally expensive for large datasets and may not scale well to 70k+ records. While effective for small to medium-sized datasets with clear decision boundaries, SVMs are not practical for this use case.
 
 - **K-Nearest Neighbors (KNN)**: KNN is also computationally expensive for large datasets, and its performance degrades with high-dimensional data (curse of dimensionality). KNN computes distances between the query point and all training points, making it computationally expensive as the dataset grows. Training time increases significantly with larger datasets, especially if there are many features.
 
-**Model Selection Summary**:
+### **🤖 Model Selection Summary**:
 
 In summary, Logistic Regression serves as a baseline model to establish a performance benchmark, while Random Forest , XGBoost , and LightGBM are chosen for their ability to handle complex relationships and large datasets efficiently. Models like XGBoost and LightGBM are prioritized for their scalability and optimization for large datasets, ensuring computational efficiency without compromising performance. While advanced models like XGBoost and LightGBM provide excellent predictive performance, interpretability is maintained through feature importance scores and SHAP values, allowing for a deeper understanding of the factors driving predictions.
 
 ## 📊 Evaluation
 
 The choice of evaluation metrics is critical in ensuring that the models developed are aligned with the goals of the no-show prediction task. Given the nature of the dataset and the problem at hand—predicting whether a customer will not show up for their reservation—we prioritized metrics that balance accuracy, interpretability, and fairness, especially in the context of class imbalance.
+
+Key Metrics:
+Accuracy : Provides a general sense of overall correctness.
+Precision : Measures the proportion of correctly predicted "No-Show" instances out of all predicted "No-Show," minimizing false alarms.
+Recall : Captures the proportion of correctly predicted "No-Show" instances out of all actual "No-Show," reducing missed opportunities for intervention.
+F1-Score : Balances precision and recall, making it particularly suitable for imbalanced datasets.
+ROC-AUC : Evaluates the model's ability to distinguish between classes across all thresholds, offering a robust measure of discrimination.
+Visualizations:
+Generate ROC curves and Precision-Recall curves to visualize model performance across different thresholds.
+Create confusion matrices to provide a detailed breakdown of predictions (True Positives, False Positives, etc.).
+Include residual plots , learning curves , and feature importance charts to diagnose model behavior and interpretability.
 
 1. Accuracy
 
@@ -286,18 +291,32 @@ Balancing Precision and Recall : While high recall is desirable, excessively low
 - The dataset may contain synthetic features that require further verification.
 - Class imbalance in the target variable (no_show) may bias the model toward the majority class.
 - Feature engineering could be further refined to capture additional patterns.
+- Not sufficient enough data to cover all scopes of the perceived driving factors of the results
+- Talk about data drift in the future
 
 ## 🚀 Next Steps
 
+- To add in deployment and monitoring features
+- Apply MLOps
+- Do up documentation
+- Liaise with stakeholders on best way to deploy and maintain it + brief them on how to use it, its limitations etc.
 - Hyperparameter Tuning : Optimize model parameters using GridSearchCV or Bayesian Optimization.
 - Advanced Feature Engineering : Incorporate interaction terms or domain-specific features.
 - Deployment : Deploy the best-performing model as a REST API for real-time predictions.
 - Monitoring : Track model performance in production to detect drift and retrain as needed.
 
-## Troubleshooting
+## ❓ FAQ
 
-1. Reset the project by running the script above and try again
+### ❓ What if my project does not work?
 
-## FAQ
+- Reset the project by running the script above and try again
 
-1.
+### ❓ Why were other metrics not chosen?
+
+### ❓ Why use Standard Scaler over MinMax Scaler
+
+### ❓ Why use OneHotEncoding over Ordinal Encoder
+
+### ❓ Why never use sklearn pipeline function to combine preprocessing and training? Instead using separate functions
+
+### ❓ Why use GridSearch CV and not Randomized Search?

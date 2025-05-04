@@ -71,7 +71,7 @@ def clean_data(
                     # Apply the cleaning function
                     df_cleaned = cleaners[column_name](df_cleaned, column_name)
                 else:
-                    print(f"⚠️ No cleaning function defined for column '{column_name}'. Skipping...")
+                    print(f"⚠️  No cleaning function defined for column '{column_name}'. Skipping...")
 
         # Step 3: Save the cleaned data to a CSV file
         if save_data:

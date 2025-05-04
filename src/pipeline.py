@@ -3,7 +3,6 @@
 
 import os
 import time
-import math
 import yaml
 import argparse
 import matplotlib
