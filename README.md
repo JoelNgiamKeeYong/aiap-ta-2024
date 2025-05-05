@@ -361,7 +361,17 @@ Balancing Precision and Recall : While high recall is desirable, excessively low
 
 - Reset the project by re-running the initialization script provided.
 - Verify that all dependencies are installed and compatible with the versions specified in the `requirements.txt` file.
-- Review logs or error messages for debugging insights. Ensure that dataset paths and configurations are correctly set in the `config.yaml` file.
+- Review logs or error messages for debugging insights.
+- Ensure that dataset paths and configurations are correctly set in the `config.yaml` file.
+
+### ❓ How did you ensure the project is portable and reproducible across different environments?
+
+- I established a consistent development environment by creating a Python virtual environment and installing all required dependencies from the `requirements.txt` file.
+- After setting up the environment, I successfully executed the entire project as intended, including the EDA notebook and ML pipeline, without encountering any issues.
+- To further ensure reproducibility, I tested the project on a separate machine with no pre-installed dependencies.
+- The setup process was seamless, and the project ran flawlessly in this clean environment, confirming its reproducibility and compatibility across different systems.
+- This dual-layered testing approach ensures that the project is robust, portable, and ready for deployment or collaboration in diverse settings.
+- I followed this Medium post on how to activate venv on bash [https://medium.com/@presh_onyee/activating-virtualenv-on-windows-using-git-bash-python-3-7-1-6b4b21640368]
 
 ### ❓ Why did we not include the preprocessing and model training into a single Pipeline?
 
