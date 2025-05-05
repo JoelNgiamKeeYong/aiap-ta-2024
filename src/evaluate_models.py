@@ -82,7 +82,7 @@ def evaluate_models(trained_models, feature_names, X_train, X_test, y_train, y_t
         print(f"      └── Evaluation completed in {evaluation_time:.2f} seconds!")
 
         # Add evaluation_time to the trained_models list
-        trained_models[i] = (model_name, best_model, training_time, model_size_kb, evaluation_time)
+        trained_models[i] = (model_name, best_model, training_time, model_size_kb, formatted_metrics, evaluation_time)
 
     # Save consolidated results
     save_consolidated_metrics(results, output_dir)

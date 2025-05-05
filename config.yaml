@@ -1,53 +1,83 @@
 # config.yaml
 # This is a configuration file for the machine learning pipeline.
 
-# General configurations
-LOKY_MAX_CPU_COUNT: "4" # Maximum number of CPU cores to use for parallel processing. Adjust this value based on your system's available resources.
+############################################################################################################################################
+# General
+LOKY_MAX_CPU_COUNT: "4" # Maximum number of CPU cores to use for parallel processing.
+n_jobs: -1 # Number of parallel jobs to run (-1 means use all available CPU cores).
+random_state: 42 # Random seed for reproducibility (e.g between train-test splits during EDA and pipeline).
 
-# Database configurations
-data_url: "https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db" # URL to download the SQLite database file
-db_path: "data/noshow.db" # Path to the SQLite database file containing the dataset.
+############################################################################################################################################
+# Database
+data_url: "https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db" # URL to download the SQLite database.
+db_path: "data/noshow.db" # Path to the SQLite database file.
 db_table_name: "noshow" # Name of the table in the database that contains the data.
-target: "no_show" # Name of the target variable in the dataset. This is the variable we want to predict.
+target: "no_show" # Name of the target variable in the dataset.
 
-# Data preprocessing configurations
-test_size: 0.2 # Proportion of the dataset to include in the test split (20%).
-random_state: 42 # Random seed for reproducibility across train-test splits.
-variance_threshold: 0.01 # asd
+############################################################################################################################################
+# Data Preprocessing
+test_size: 0.2 # Proportion of the dataset to include in the test split (default: 20%).
 
-# Model training configurations
-use_randomized_cv: False # To set True if running large array of parameters, then use False to use GridSearch CV to search
-cv_folds: 5 # Number of cross-validation folds for hyperparameter tuning. A smaller number speeds up training but may reduce robustness.
-n_jobs: -1 # Number of parallel jobs to run (-1 means use all available CPU cores). Set to a specific number if you want to limit resource usage.
-scoring_metric: "f1" # Metric to optimize during hyperparameter tuning. F1 score is ideal for binary classification tasks where both precision and recall are important.
-
-# Model-specific hyperparameter configurations
+############################################################################################################################################
+# Model Training
+use_randomized_cv: False # Set to False to use GridSearchCV instead of RandomizedSearchCV.
+cv_folds: 5 # Number of cross-validation folds for hyperparameter tuning.
+scoring_metric: "f1" # Metric to optimize during hyperparameter tuning.
 model_configuration:
+  ##########################################################################################################################
   Logistic Regression:
-    params:
+    # For GridSearch CV - For fine hyperparameter tuning
+    params_gscv:
       C: [0.1, 1, 10] # Inverse of regularization strength; smaller values specify stronger regularization.
-      solver: ["liblinear"] # Algorithm to use in optimization. "liblinear" works well for small datasets and binary classification.
+      solver: ["liblinear"] # Algorithm to use in optimization.
 
+    # For RandomizedSearch CV - For exploration
+    params_rscv:
+      C: { "type": "uniform", "low": 0.1, "high": 10 }
+      solver: ["liblinear"]
+
+  ##########################################################################################################################
   Random Forest:
-    params:
-      n_estimators: [50, 100, 200] # Number of trees in the forest. More trees can improve performance but increase computation time.
-      max_depth: [null, 10, 20] # Maximum depth of each tree. "null" means no limit, allowing trees to grow fully.
-      min_samples_split: [2, 5, 10] # Minimum number of samples required to split an internal node.
+    params_gscv:
+      n_estimators: [100] # Number of trees in the forest.
+      max_depth: [10] # Maximum depth of each tree. "null" means no limit, allowing trees to grow fully.
+      min_samples_split: [5] # Minimum number of samples required to split an internal node.
 
+    params_rscv:
+      n_estimators: { "type": "randint", "low": 50, "high": 200 }
+      max_depth: [null, 10, 20]
+      min_samples_split: { "type": "randint", "low": 2, "high": 10 }
+
+  ##########################################################################################################################
   XGBoost:
-    params:
-      learning_rate: [0.01, 0.1, 0.2] # Step size shrinkage used in updates to prevent overfitting.
-      n_estimators: [50, 100, 200] # Number of boosting rounds (trees). More rounds can improve performance but increase risk of overfitting.
-      max_depth: [3, 5, 7] # Maximum depth of each tree. Deeper trees increase model complexity.
-      subsample: [0.8, 1.0] # Fraction of samples to use for each tree. Lower values reduce overfitting.
+    params_gscv:
+      learning_rate: [0.01, 0.2] # Step size shrinkage to prevent overfitting.
+      n_estimators: [50, 200] # Number of boosting rounds (trees).
+      max_depth: [3, 7] # Maximum depth of each tree.
+      subsample: [0.8, 1.0] # Fraction of samples to use for each tree.
 
+    params_rscv:
+      learning_rate: { "type": "uniform", "low": 0.01, "high": 0.2 }
+      n_estimators: { "type": "randint", "low": 50, "high": 200 }
+      max_depth: { "type": "randint", "low": 3, "high": 7 }
+      subsample: { "type": "uniform", "low": 0.8, "high": 1.0 }
+
+  ##########################################################################################################################
   LightGBM:
-    params:
-      learning_rate: [0.05] # Controls the contribution of each tree. Smaller values require more boosting rounds.
-      n_estimators: [50] # Number of boosting rounds (trees). Start with a small number to avoid overfitting.
-      max_depth: [5] # Maximum depth of each tree. Limits tree complexity to prevent overfitting.
-      num_leaves: [31] # Number of leaves in each tree. Higher values increase model capacity but risk overfitting.
-      subsample: [0.8] # Fraction of samples to use for each tree. Helps reduce overfitting.
-      colsample_bytree: [0.8] # Fraction of features to use for each tree. Helps reduce overfitting.
-      reg_lambda: [0.1] # L2 regularization term. Penalizes large weights to prevent overfitting.
+    params_gscv:
+      learning_rate: [0.05] # Controls the contribution of each tree.
+      n_estimators: [50] # Number of boosting rounds (trees).
+      max_depth: [5] # Maximum depth of each tree.
+      num_leaves: [31] # Number of leaves in each tree.
+      subsample: [0.8] # Fraction of samples to use for each tree.
+      colsample_bytree: [0.5] # Fraction of features to use for each tree.
+      reg_lambda: [0.1] # L2 regularization term to prevent overfitting.
 
+    params_rscv:
+      learning_rate: { "type": "uniform", "low": 0.01, "high": 0.1 }
+      n_estimators: { "type": "randint", "low": 50, "high": 200 }
+      max_depth: { "type": "randint", "low": 3, "high": 7 }
+      num_leaves: { "type": "randint", "low": 20, "high": 50 }
+      subsample: { "type": "uniform", "low": 0.6, "high": 1.0 }
+      colsample_bytree: { "type": "uniform", "low": 0.5, "high": 1.0 }
+      reg_lambda: { "type": "uniform", "low": 0.01, "high": 0.5 }

@@ -70,7 +70,7 @@ The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory
    bash run.sh --lite     # Run the pipeline in lite mode, for quick debugging of the pipeline
    ```
 
-4. Experiment with the ML pipeline by modifying the configuration in `config.yaml` and `/src` files
+4. Experiment with the ML pipeline by modifying the `config.yaml` and `/src` files, then review the training logs in the `/archives` folder
 
 5. [Optional] Reset the project
 
@@ -156,17 +156,20 @@ The machine learning pipeline is designed to be **modular**, **interpretable**, 
 
 - Split the data early using a stratified train-test split to preserve the class distribution of the target variable, ensuring both sets are representative of the imbalanced dataset.
 - Use an 80%-20% split to allocate sufficient data for training and evaluation while maintaining robustness.
+- A 20% test split strikes a balance between having sufficient data for training and evaluating model performance on unseen data.
 - Perform advanced cleaning steps, including imputing missing values, removing outliers, and addressing inconsistencies based on insights from the training set only during EDA.
 - Conduct feature engineering to create new, meaningful features and transform existing ones, enhancing interpretability and predictive power (e.g., deriving domain-specific synthetic features).
 - Normalize numerical features using standard scaling to improve performance for gradient-based models and ensure consistent feature ranges.
 - Encode categorical variables using techniques like One-Hot Encoding to ensure compatibility with machine learning algorithms.
 - Perform feature selectiong using various techniques and remove features with excessive noise, irrelevance, or low variance to improve model efficiency and performance.
+- Separating preprocessing and training enhances transparency and simplifies debugging, as each step can be independently validated. Using separate functions allows greater flexibility in modifying individual components (e.g., swapping scalers or encoders) without affecting the entire pipeline. This approach ensures reproducibility and consistency across different stages of the project.
 
 ### 4. 🤖 Model Training:
 
 - Train multiple machine learning models to identify the best-performing algorithm for the no-show prediction task.
 - Perform hyperparameter tuning using `GridSearchCV` to exhaustively search through specified parameter grids and find the optimal configuration for each model.
 - Optionally switch to `RandomizedSearchCV` via the `config.yaml` file for faster exploration of hyperparameter spaces, especially when computational resources are limited.
+- GridSearchCV is preferred for fine-tuning after identifying promising hyperparameter ranges using Randomized Search.
 - Save the best-trained models along with their training time and size for comparison and future use.
 
 ### 5. 📊 Model Evaluation:
@@ -176,67 +179,125 @@ The machine learning pipeline is designed to be **modular**, **interpretable**, 
 - Use cross-validation during training to enhance robustness and minimize overfitting.
 - Save evaluation results and visualizations to a dedicated output directory for easy review and comparison.
 
-## 🛠️ Feature Processing Summary
+## 🛠️ Feature Processing
 
 The following table summarizes how each feature in the dataset was processed to prepare it for machine learning modeling. These transformations aim to improve model performance, ensure compatibility with algorithms, and reduce noise while preserving meaningful patterns in the data.
 
-| Category    | Feature          | Source     | Processing                   | Rationale |
-| ----------- | ---------------- | ---------- | ---------------------------- | --------- |
-| Identifiers | `booking_id`     | Original   | ❌ Dropped                   |           |
-| Target      | `no_show` ⭐     | Original   | Unchanged                    |           |
-| Categorical | `branch`         | Original   | Converted to `category` type |           |
-|             | `booking_month`  | Original   | Converted to `int` type      |
-|             | `arrival_month`  | Original   | Converted to int             |
-|             | `arrival_day`    | Original   | Converted to int             |
-|             | `checkout_month` | Original   | Converted to int             |
-|             | `checkout_day`   | Original   | Converted to int             |
-|             | `country`        | Original   | One-hot encoded              |
-|             | `first_time`     | Original   | One-hot encoded              |
-|             | `room`           | Original   | One-hot encoded              |
-|             | `platform`       | Original   | One-hot encoded              |
-|             | `currency_type`  | 🆕         | One-hot encoded              |
-| Numerical   | `price_in_sgd`   | Engineered | Normalized                   |
-|             | `price`          | Original   | Dropped                      |
-|             | `num_adults`     | Original   | One-hot encoded              |
-|             | `num_children`   | Original   | One-hot encoded              |
+For a detailed explanation of each feature's processing and rationale, please refer to the `eda.ipynb` notebook.
+
+| Category    | Feature             | Source | Processing                               | Rationale / Remarks                   |
+| ----------- | ------------------- | ------ | ---------------------------------------- | ------------------------------------- |
+| Identifiers | `booking_id`        | 🌱     | ❌                                       | No predictive value                   |
+| Target      | `no_show` ⭐        | 🌱     | Unchanged                                |                                       |
+| Categorical | `branch`            | 🌱     | Converted to `category` type             |                                       |
+|             | `booking_month`     | 🌱     | Converted to `int` type                  |                                       |
+|             | `arrival_month`     | 🌱     | Converted to int                         |                                       |
+|             | `arrival_day`       | 🌱     | Converted to int                         |                                       |
+|             | `checkout_month`    | 🌱     | Converted to int                         |                                       |
+|             | `checkout_day`      | 🌱     | Converted to int                         |                                       |
+|             | `country`           | 🌱     | One-hot encoded                          |                                       |
+|             | `first_time`        | 🌱     | Binary encoded manually                  | This is a binary feature              |
+|             | `room`              | 🌱     | Missing values removed; One-hot encoded  |                                       |
+|             | `platform`          | 🌱     | One-hot encoded                          |                                       |
+|             | `currency_type`     | ⚙️     | One-hot encoded                          |                                       |
+|             | `stay_category`     | ⚙️     | One-hot encoded                          | Short, mid-term and long              |
+|             | `has_children`      | ⚙️     | One-hot encoded                          |                                       |
+|             | `total_pax`         | ⚙️     | One-hot encoded                          |                                       |
+| Numerical   | `price`             | 🌱     | ❌                                       | Consists of both USD and SGD amounts  |
+|             | `num_adults`        | 🌱     | One-hot encoded                          |                                       |
+|             | `num_children`      | 🌱     | ❌                                       | Used to create `has_children` feature |
+|             | `price_in_sgd`      | ⚙️     | Missing values imputed; outliers removed |                                       |
+|             | `months_to_arrival` | ⚙️     | Normalized                               |                                       |
+|             |                     |        |                                          |                                       |
+
+**└── Summary:** 21 features processed (12 original, 8 engineered). 2 features dropped. 18 features left.
+
+**└── Legend / Notes:**
+
+- ⭐: Target variable.
+- 🌱: Original feature from the raw dataset.
+- ⚙️: Derived or engineered feature created during preprocessing.
+- ❌: Feature dropped from the dataset due to irrelevance, redundancy, or lack of predictive power.
+- Kindly note that the 'Category' column refers to the final data type of the corresponding feature, and not the original data type.
 
 ## 🤖 Candidate Models
 
 The selection of machine learning models for predicting customer no-shows was guided by the following key considerations:
 
-### **🤖 Nature of the Dataset**:
+### **✒️ Selection Criteria**:
 
-- **Structured/Tabular Data**: The dataset consists of structured/tabular data with a mix of numerical, categorical, and ordinal features. Tree-based models such as **XGBoost**, **Random Forest**, and **LightGBM** are highly effective for such datasets due to their ability to handle mixed data types and capture complex relationships.
+- **Binary Classification:** The target variable (`no_show`) is binary (0 = Show, 1 = No-Show), making classification algorithms like Logistic Regression, Random Forest, XGBoost, and LightGBM particularly suitable.
 
-- **Binary Classification**: The target variable (`no_show`) is binary (0 = Show, 1 = No-Show), making classification algorithms like **Logistic Regression**, **Random Forest**, and **XGBoost** particularly suitable.
+- **Structured/Tabular Data:** The dataset comprises structured data with mixed feature types. Tree-based models such as XGBoost, Random Forest, and LightGBM are highly effective for such datasets due to their ability to handle mixed data types, capture non-linear relationships, and manage feature interactions.
 
-- **Dataset Size**: With over 70,000 records, scalability is crucial. Models like **XGBoost** and **LightGBM** are optimized for large datasets and can efficiently handle high-dimensional data.
+- **Scalability:** With over 70,000 records, scalability is crucial. Models like XGBoost and LightGBM are optimized for large datasets and can efficiently handle high-dimensional data without significant increases in computational cost.
+
+- **Interpretability:** While performance is a priority, interpretability remains important for deriving actionable insights. Feature importance scores help explain model predictions, ensuring transparency and trustworthiness.
 
 ### **🤖 Selected Models**:
 
-- **Logistic Regression**: Logistic Regression is a simple and interpretable model that works well for binary classification problems. It is computationally efficient and scales well with large datasets and provides a baseline performance to compare against more complex models. Additionally, feature importance can be derived from the coefficients, which helps in understanding the impact of each feature on the target variable.
+- **`Logistic Regression`**: Logistic Regression is a simple and interpretable model that works well for binary classification problems. It is computationally efficient and scales well with large datasets and provides a baseline performance to compare against more complex models. Additionally, feature importance can be derived from the coefficients, which helps in understanding the impact of each feature on the target variable.
 
-- **Random Forest**: Random Forest is an ensemble method that builds multiple decision trees and aggregates their predictions. It handles non-linear relationships and interactions between features effectively and is robust to overfitting due to bagging (bootstrap aggregating) and random feature selection. Random Forest works well with both numerical and categorical features and provides feature importance scores, which are useful for identifying key predictors. However, its training time can be longer compared to simpler models, especially with large datasets or deep trees, and it is less interpretable than Logistic Regression.
+- **`Random Forest`**: Random Forest is an ensemble method that builds multiple decision trees and aggregates their predictions. It handles non-linear relationships and interactions between features effectively and is robust to overfitting due to bagging (bootstrap aggregating) and random feature selection. Random Forest works well with both numerical and categorical features and provides feature importance scores, which are useful for identifying key predictors. However, its training time can be longer compared to simpler models, especially with large datasets or deep trees, and it is less interpretable than Logistic Regression.
 
-- **XGBoost**: XGBoost is a gradient boosting algorithm that builds trees sequentially, optimizing for errors made by previous trees. It performs exceptionally well on structured/tabular data and supports regularization (L1/L2 penalties), which helps prevent overfitting. XGBoost is faster than Random Forest for large datasets due to its optimized implementation and ability to handle sparse data. It also handles imbalanced datasets well and provides feature importance scores and SHAP values for interpretability. While it scales well with large datasets, it is slightly less interpretable than Logistic Regression.
+- **`XGBoost`**: XGBoost is a gradient boosting algorithm that builds trees sequentially, optimizing for errors made by previous trees. It performs exceptionally well on structured/tabular data and supports regularization (L1/L2 penalties), which helps prevent overfitting. XGBoost is faster than Random Forest for large datasets due to its optimized implementation and ability to handle sparse data. It also handles imbalanced datasets well and provides feature importance scores and SHAP values for interpretability. While it scales well with large datasets, it is slightly less interpretable than Logistic Regression.
 
-- **LightGBM**: LightGBM is another gradient boosting framework that is optimized for speed and memory efficiency, especially on large datasets. It uses novel techniques such as Gradient-based One-Side Sampling (GOSS) and Exclusive Feature Bundling (EFB) to reduce training time without sacrificing accuracy. LightGBM handles categorical features natively and efficiently manages large datasets with millions of rows and high-dimensional feature spaces. Like XGBoost, it supports regularization (L1/L2 penalties) to prevent overfitting and provides feature importance scores and SHAP values for interpretability. LightGBM is often faster than XGBoost due to its histogram-based approach and optimized tree construction. However, like other advanced models, it is slightly less interpretable than Logistic Regression.
+- **`LightGBM`**: LightGBM is another gradient boosting framework that is optimized for speed and memory efficiency, especially on large datasets. It uses novel techniques such as Gradient-based One-Side Sampling (GOSS) and Exclusive Feature Bundling (EFB) to reduce training time without sacrificing accuracy. LightGBM handles categorical features natively and efficiently manages large datasets with millions of rows and high-dimensional feature spaces. Like XGBoost, it supports regularization (L1/L2 penalties) to prevent overfitting and provides feature importance scores and SHAP values for interpretability. LightGBM is often faster than XGBoost due to its histogram-based approach and optimized tree construction. However, like other advanced models, it is slightly less interpretable than Logistic Regression.
 
-### **🤖 Why not other models?**:
+### **❓ Why not other models?**:
 
-- **Neural Networks**: Neural networks are less suitable for structured/tabular data, especially when simpler models like XGBoost and LightGBM already deliver strong performance with lower computational costs. They excel in scenarios involving unstructured data (e.g., text, images) or highly complex patterns, which this dataset does not exhibit. Additionally, neural networks demand significantly more computational resources and time, creating an opportunity cost: the same resources could be allocated to faster, interpretable models that achieve comparable or better results. Given the excellent performance of tree-based models here (see below), neural networks are unnecessary and inefficient for this task.
+- **`Neural Networks`**: Neural networks are less suitable for structured/tabular data, especially when simpler models like XGBoost and LightGBM already deliver strong performance with lower computational costs. They excel in scenarios involving unstructured data (e.g., text, images) or highly complex patterns, which this dataset does not exhibit. Additionally, neural networks demand significantly more computational resources and time, creating an opportunity cost: the same resources could be allocated to faster, interpretable models that achieve comparable or better results. Given the excellent performance of tree-based models here (see below), neural networks are unnecessary and inefficient for this task.
 
-- **Support Vector Machines (SVM)**: SVMs are computationally expensive for large datasets and may not scale well to 70k+ records. While effective for small to medium-sized datasets with clear decision boundaries, SVMs are not practical for this use case.
+- **`Support Vector Machines (SVM)`**: SVMs are computationally expensive for large datasets and may not scale well to 70k+ records. While effective for small to medium-sized datasets with clear decision boundaries, SVMs are not practical for this use case.
 
-- **K-Nearest Neighbors (KNN)**: KNN is also computationally expensive for large datasets, and its performance degrades with high-dimensional data (curse of dimensionality). KNN computes distances between the query point and all training points, making it computationally expensive as the dataset grows. Training time increases significantly with larger datasets, especially if there are many features.
+- **`K-Nearest Neighbors (KNN)`**: KNN is also computationally expensive for large datasets, and its performance degrades with high-dimensional data (curse of dimensionality). KNN computes distances between the query point and all training points, making it computationally expensive as the dataset grows. Training time increases significantly with larger datasets, especially if there are many features.
 
-### **🤖 Model Selection Summary**:
+### **Model Selection Summary**:
 
 In summary, Logistic Regression serves as a baseline model to establish a performance benchmark, while Random Forest , XGBoost , and LightGBM are chosen for their ability to handle complex relationships and large datasets efficiently. Models like XGBoost and LightGBM are prioritized for their scalability and optimization for large datasets, ensuring computational efficiency without compromising performance. While advanced models like XGBoost and LightGBM provide excellent predictive performance, interpretability is maintained through feature importance scores and SHAP values, allowing for a deeper understanding of the factors driving predictions.
 
-## 📊 Evaluation
+## 📊 Model Evaluation
 
-The choice of evaluation metrics is critical in ensuring that the models developed are aligned with the goals of the no-show prediction task. Given the nature of the dataset and the problem at hand—predicting whether a customer will not show up for their reservation—we prioritized metrics that balance accuracy, interpretability, and fairness, especially in the context of class imbalance.
+The evaluation of machine learning models in this project is designed to align with the business goals of predicting customer no-shows while addressing the challenges posed by an imbalanced dataset. To ensure that the chosen metrics and visualizations provide actionable insights, we prioritize methods that balance interpretability, fairness, and robustness.\
+
+### Evaluation Metrics:
+
+1. **Accuracy**
+
+   - While accuracy provides a general sense of overall correctness, it serves as a baseline metric to assess the model's performance on balanced subsets of the data.
+   - However, due to the class imbalance (more "Show" instances than "No-Show"), accuracy alone is insufficient for final model selection.
+
+2. **F1-Score**
+
+   - The F1-score balances precision and recall, providing a single metric that reflects the model's ability to accurately detect no-shows without overly favoring either metric.
+   - This is particularly important for imbalanced datasets, where optimizing one metric at the expense of the other can lead to suboptimal outcomes.
+   - Precision ensures that when the model predicts a no-show, it is likely correct. This minimizes false alarms, which could lead to unnecessary resource allocation or interventions, such as overbooking or offering discounts.
+   - Recall prioritizes capturing as many true no-shows as possible. Missing a no-show (false negative) can result in unutilized resources, lost revenue, or operational inefficiencies, making recall a critical metric in this context.
+
+3. **ROC-AUC**
+
+   - ROC-AUC evaluates the model's ability to distinguish between "Show" and "No-Show" classes across all probability thresholds.
+   - Unlike accuracy, ROC-AUC is less sensitive to class imbalance, making it a reliable supplementary metric for comparing models.
+
+4. **Confusion Matrix**
+
+   - The confusion matrix provides a granular breakdown of predictions into True Positives (TP), True Negatives (TN), False Positives (FP), and False Negatives (FN).
+   - This detailed view helps identify specific weaknesses in the model, such as whether it struggles more with false positives or false negatives, enabling targeted improvements.
+
+To ensure transparency and trustworthiness in model predictions, feature importance is used instead of SHAP values. Calculating SHAP values is computationally expensive and unnecessary for this problem, as feature importance provides sufficient interpretability to understand the key drivers of no-show behavior. If deeper interpretability is required in the future, SHAP values can be incorporated.
+
+Visualizations play a crucial role in understanding model behavior and diagnosing performance. The following visualizations are generated for each model:
+
+- ROC Curves
+  Visualize the trade-off between True Positive Rate (TPR) and False Positive Rate (FPR) across different thresholds, complementing the ROC-AUC metric.
+- Precision-Recall Curves
+  Highlight the balance between precision and recall, particularly useful for evaluating performance on the minority class ("No-Show").
+- Confusion Matrices
+  Provide a clear breakdown of predictions, helping to identify areas for improvement, such as reducing false negatives or false positives.
+- Feature Importance Charts
+  Illustrate the relative importance of features in driving predictions, aiding in understanding the factors contributing to no-show behavior.
+- Learning Curves
+  Diagnose potential issues such as underfitting or overfitting by analyzing the model's performance on training and validation sets over time.
 
 Key Metrics:
 Accuracy : Provides a general sense of overall correctness.
@@ -249,35 +310,6 @@ Generate ROC curves and Precision-Recall curves to visualize model performance a
 Create confusion matrices to provide a detailed breakdown of predictions (True Positives, False Positives, etc.).
 Include residual plots , learning curves , and feature importance charts to diagnose model behavior and interpretability.
 
-1. Accuracy
-
-   Accuracy measures the proportion of correctly predicted instances (both "Show" and "No-Show") out of the total predictions. While it provides a general sense of model performance, it can be misleading in cases of imbalanced datasets, where one class (e.g., "Show") dominates the other. In our case, since the dataset contains more "Show" instances than "No-Show," relying solely on accuracy might overestimate the model's effectiveness. Nevertheless, accuracy remains a useful baseline metric to assess overall correctness.
-
-2. F1 Score
-
-   The F1-score was chosen as the primary metric because it strikes a balance between precision and recall , making it particularly suitable for imbalanced datasets.
-
-   - Precision : Measures the proportion of correctly predicted "No-Show" instances out of all instances predicted as "No-Show." High precision ensures that when the model predicts a no-show, it is likely correct, minimizing false alarms.
-
-   - Recall : Measures the proportion of correctly predicted "No-Show" instances out of all actual "No-Show" instances. High recall ensures that the model captures most of the true no-shows, reducing missed opportunities for intervention.
-
-   The F1-score is the harmonic mean of precision and recall, providing a single value that reflects the model's ability to accurately detect no-shows without overly favoring either precision or recall. This is crucial for our problem, as failing to predict a no-show (false negative) could result in lost revenue or operational inefficiencies, while incorrectly predicting a no-show (false positive) might lead to unnecessary resource allocation.
-
-3. ROC-AUC
-
-   The Receiver Operating Characteristic (ROC) curve and its corresponding Area Under the Curve (AUC) were also used to evaluate model performance. The ROC curve plots the trade-off between the True Positive Rate (TPR) and the False Positive Rate (FPR) across different probability thresholds. ROC-AUC provides a comprehensive view of the model's ability to distinguish between "Show" and "No-Show" classes across all possible thresholds. A higher AUC indicates better overall discrimination, making it a robust metric for comparing models. Unlike accuracy, ROC-AUC is less sensitive to class imbalance, making it a reliable supplementary metric for our imbalanced dataset.
-
-4. Confusion Matrix
-
-   The confusion matrix provides a detailed breakdown of the model's predictions into four categories:
-
-   - True Positives (TP): Correctly predicted no-shows.
-   - True Negatives (TN): Correctly predicted shows.
-   - False Positives (FP): Incorrectly predicted no-shows (Type I error).
-   - False Negatives (FN): Incorrectly predicted shows (Type II error).
-
-   This granular view helps identify specific weaknesses in the model, such as whether it struggles more with false positives or false negatives. For instance, if the cost of missing a no-show (FN) is higher than incorrectly flagging a show as a no-show (FP), we can adjust the decision threshold accordingly.
-
 Use feature importance instea of SHAP values as calculating SHAP values is computationally very expensive and this problem does not need that much interpretability. But if required can add that in.
 
 Given the business context of no-show prediction, the following considerations guided the choice of metrics:
@@ -288,35 +320,52 @@ Balancing Precision and Recall : While high recall is desirable, excessively low
 
 ## ⚠️ Limitations
 
-- The dataset may contain synthetic features that require further verification.
-- Class imbalance in the target variable (no_show) may bias the model toward the majority class.
-- Feature engineering could be further refined to capture additional patterns.
-- Not sufficient enough data to cover all scopes of the perceived driving factors of the results
-- Talk about data drift in the future
+- **Class Imbalance:** The target variable (`no_show`) is imbalanced, with "Show" outnumbering "No-Show." While metrics like F1-score and ROC-AUC were used to address this, advanced techniques such as cost-sensitive learning or synthetic data generation (e.g., SMOTE) could further improve performance.
+
+- **Synthetic Features:** Engineered features like months_to_arrival and stay_duration improved model performance but require domain expert validation to ensure their real-world relevance and accuracy in capturing underlying patterns.
+
+- **Insufficient Data Coverage:** The dataset lacks external factors like economic conditions, weather, or customer sentiment (e.g., reviews), which could influence no-show behavior. Incorporating these variables could enhance predictive power and generalizability.
+
+- **Feature Engineering Refinements:** While feature engineering was systematic, deeper exploration of feature interactions (e.g., booking_month vs. platform) and advanced techniques like dimensionality reduction or embeddings could uncover additional insights.
+
+- **Data Drift:** The dataset reflects historical booking patterns, which may not account for evolving customer behaviors due to economic shifts, platform changes, or travel trends. Implementing mechanisms to monitor and address data drift is essential for long-term model reliability.
+
+- **Generalization:** The model is trained on data from a specific hotel chain, potentially limiting its applicability to other businesses or regions. Testing the model on diverse datasets would help assess its robustness and scalability.
+
+- **Missing Data Assumptions:** Missing values were handled using imputation or removal, but the assumptions behind these methods (e.g., missing at random) may not fully reflect the true data-generating process. Sensitivity analysis could validate the impact of these assumptions.
+
+- **Computational Constraints:** Techniques like SHAP values were avoided due to computational costs, but they could provide deeper interpretability if resources allow. Similarly, hyperparameter tuning relied on GridSearchCV; RandomizedSearchCV could offer faster exploration for large grids.
+
+- **Temporal Leakage Risk:** Features like booking_id were excluded to avoid temporal leakage, but careful review of all features is necessary to ensure no unintended leakage affects model performance.
+
+- **Ethical Considerations:** The model's predictions could influence resource allocation or customer interventions, raising ethical concerns about fairness and bias. Future work should include fairness assessments to ensure equitable treatment across demographic groups.
 
 ## 🚀 Next Steps
 
-- To add in deployment and monitoring features
-- Apply MLOps
-- Do up documentation
-- Liaise with stakeholders on best way to deploy and maintain it + brief them on how to use it, its limitations etc.
-- Hyperparameter Tuning : Optimize model parameters using GridSearchCV or Bayesian Optimization.
-- Advanced Feature Engineering : Incorporate interaction terms or domain-specific features.
-- Deployment : Deploy the best-performing model as a REST API for real-time predictions.
-- Monitoring : Track model performance in production to detect drift and retrain as needed.
+- **Hyperparameter Tuning:** Optimize model parameters using advanced techniques like GridSearchCV or Bayesian Optimization.
+- **Advanced Feature Engineering:** Explore interaction terms, polynomial features, or domain-specific insights to enhance model performance.
+- **Deployment:** Deploy the best-performing model as a scalable REST API for real-time predictions.
+- **Monitoring:** Implement monitoring to detect data drift and model degradation, with automated retraining pipelines.
+- **MLOps Integration:** Apply MLOps practices for streamlined model management, versioning, and CI/CD workflows.
+- **Stakeholder Collaboration:** Work with stakeholders to define deployment strategies, usage guidelines, and address limitations.
+- **Comprehensive Documentation:** Provide clear, actionable documentation for model usage, maintenance, and troubleshooting.
 
 ## ❓ FAQ
 
-### ❓ What if my project does not work?
+### ❓ What should I do if the project does not execute as expected?
 
-- Reset the project by running the script above and try again
+- Reset the project by re-running the initialization script provided.
+- Verify that all dependencies are installed and compatible with the versions specified in the `requirements.txt` file.
+- Review logs or error messages for debugging insights. Ensure that dataset paths and configurations are correctly set in the `config.yaml` file.
 
-### ❓ Why were other metrics not chosen?
+### ❓ Why were oversampling and undersampling techniques not applied?
 
-### ❓ Why use Standard Scaler over MinMax Scaler
+- Oversampling (e.g., SMOTE) and undersampling can artificially inflate or reduce the number of instances, potentially leading to overfitting or loss of valuable information.
+- Instead, techniques like class weighting or ensemble methods (e.g., XGBoost, LightGBM) were used to handle class imbalance while preserving the true data distribution.
+- These methods ensure that the model learns from actual patterns in the data without introducing synthetic samples or discarding real ones.
 
-### ❓ Why use OneHotEncoding over Ordinal Encoder
+### ❓ Why include feature importance charts instead of SHAP values?
 
-### ❓ Why never use sklearn pipeline function to combine preprocessing and training? Instead using separate functions
-
-### ❓ Why use GridSearch CV and not Randomized Search?
+- Feature importance charts provide a computationally efficient way to interpret model predictions, especially for tree-based models like Random Forest, XGBoost, and LightGBM.
+- While SHAP values offer deeper insights into feature contributions, they are computationally expensive and may not be necessary for this problem’s level of interpretability.
+- Feature importance charts strike a balance between interpretability and computational efficiency, making them suitable for deriving actionable insights.

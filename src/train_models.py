@@ -3,12 +3,14 @@
 import joblib
 import os
 import time
-from sklearn.model_selection import GridSearchCV
+from scipy.stats import uniform, randint
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 def train_models(
-    X_train, X_test, y_train, y_test,
     models,
-    n_jobs, cv_folds, scoring_metric
+    X_train, y_train,
+    use_randomized_cv,
+    n_jobs, cv_folds, scoring_metric, random_state
 ):
     """
     Preprocess the cleaned dataset and train multiple machine learning models.
@@ -48,14 +50,33 @@ def train_models(
 
             # Perform hyperparameter tuning using GridSearchCV
             print(f"      └── Performing hyperparameter tuning...")
-            grid_search = GridSearchCV(
-                estimator=model_info["model"],
-                param_grid=model_info["params"],
-                scoring=scoring_metric,
-                cv=cv_folds,
-                n_jobs=n_jobs
-            )
-            grid_search.fit(X_train, y_train)
+            if use_randomized_cv == True:
+                print(f"      └── Utilising randomized search cross-validation...")
+                # Convert params to distributions for RandomizedSearchCV
+                param_distributions = parse_hyperparameters(model_info["params_rscv"])
+                # Use params for RandomizedSearchCV
+                search = RandomizedSearchCV(
+                    estimator=model_info["model"],
+                    param_distributions=param_distributions,
+                    n_iter=10,
+                    scoring=scoring_metric,
+                    cv=cv_folds,
+                    n_jobs=n_jobs,
+                    random_state=random_state
+                )
+            else:
+                print(f"      └── Utilising grid search cross-validation...")
+                # Use params for GridSearchCV
+                search = GridSearchCV(
+                    estimator=model_info["model"],
+                    param_grid=model_info["params_gscv"],
+                    scoring=scoring_metric,
+                    cv=cv_folds,
+                    n_jobs=n_jobs,
+                )
+
+            # Fit training data
+            search.fit(X_train, y_train)
 
             # Measure training time
             end_time = time.time()
@@ -63,8 +84,9 @@ def train_models(
             print(f"      └── Model trained successfully in {training_time:.2f} seconds.")
 
             # Extract the best model and parameters
-            best_model = grid_search.best_estimator_
-            print(f"      └── Best parameters: {grid_search.best_params_}")
+            best_model = search.best_estimator_
+            best_params = {k: float(round(v, 1)) if isinstance(v, float) else v for k, v in search.best_params_.items()}
+            print(f"      └── Best parameters: {best_params}")
 
             # Save the trained model permanently
             model_path = f"models/{model_name.replace(' ', '_').lower()}_model.joblib"
@@ -82,3 +104,22 @@ def train_models(
     except Exception as e:
         print(f"❌ An error occurred during model training: {e}")
         raise RuntimeError("Model training process failed.") from e
+    
+
+def parse_hyperparameters(params):
+    """
+    Parse hyperparameters from YAML configuration into a format suitable for RandomizedSearchCV.
+    """
+    parsed_params = {}
+    for param_name, param_config in params.items():
+        if isinstance(param_config, list):  # Categorical parameters
+            parsed_params[param_name] = param_config
+        elif isinstance(param_config, dict):  # Continuous or discrete parameters
+            param_type = param_config["type"]
+            if param_type == "uniform":
+                parsed_params[param_name] = uniform(loc=param_config["low"], scale=param_config["high"] - param_config["low"])
+            elif param_type == "randint":
+                parsed_params[param_name] = randint(param_config["low"], param_config["high"])
+            else:
+                raise ValueError(f"Unsupported parameter type: {param_type}")
+    return parsed_params

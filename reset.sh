@@ -16,6 +16,19 @@ for DIR in "${DIRECTORIES[@]}"; do
     fi
 done
 
+# Check if the /archives/training_logs.txt file exists and ask for confirmation
+LOG_FILE="archives/training_logs.txt"
+if [ -f "$LOG_FILE" ]; then
+    echo
+    read -p "❓  Do you want to delete the '$LOG_FILE' file? (y/n): " CONFIRMATION
+    if [[ "$CONFIRMATION" == "y" || "$CONFIRMATION" == "Y" ]]; then
+        echo "   └── Deleting '$LOG_FILE' file..."
+        rm -f "$LOG_FILE"
+    else
+        echo "   └── Skipping deletion of '$LOG_FILE'."
+    fi
+fi
+
 # Final confirmation
 echo
 echo "✅ Project reset completed successfully!"

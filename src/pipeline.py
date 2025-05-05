@@ -6,6 +6,8 @@ import time
 import yaml
 import argparse
 import matplotlib
+import pandas as pd
+from datetime import datetime
 from tabulate import tabulate
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -44,10 +46,11 @@ def main():
     N_JOBS = config["n_jobs"]
     CV_FOLDS = config["cv_folds"]
     SCORING_METRIC = config["scoring_metric"]
-    LR_PARAMS = config["model_configuration"]["Logistic Regression"]["params"]
-    RF_PARAMS = config["model_configuration"]["Random Forest"]["params"]
-    XG_PARAMS = config["model_configuration"]["XGBoost"]["params"]
-    LGBM_PARAMS = config["model_configuration"]["LightGBM"]["params"]
+    USE_RANDOMIZED_CV = config["use_randomized_cv"]
+    LR_MODEL = config["model_configuration"]["Logistic Regression"]
+    RF_MODEL = config["model_configuration"]["Random Forest"]
+    XG_MODEL = config["model_configuration"]["XGBoost"]
+    LGBM_MODEL = config["model_configuration"]["LightGBM"]
 
     # Set environment variables for parallel processing and matplotlib backend
     os.environ['LOKY_MAX_CPU_COUNT'] = LOKY_MAX_CPU_COUNT 
@@ -66,8 +69,7 @@ def main():
     )
     compare_dataframes(df_original=df, df_new=df_cleaned, original_name_string="raw", new_name_string="cleaned")
 
-    # Step 3: Perform preprocessing (e.g. removing outliers, feature selection, feature engineering) based on training data
-    # - Excludes test data information (to avoid data leakage)
+    # Step 3: Preprocess the data
     X_train, X_test, y_train, y_test, df_preprocessed, feature_names = preprocess_data(
         df_cleaned=df_cleaned,
         save_data=True,
@@ -80,34 +82,40 @@ def main():
         models = {
             "LightGBM": {  
                 "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
-                "params": LGBM_PARAMS
+                "params_gscv": LGBM_MODEL['params_gscv'],
+                "params_rscv": LGBM_MODEL['params_rscv']
             }
         }
     else:
         models = {
             "Logistic Regression": {
                 "model": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-                "params": LR_PARAMS
+                "params_gscv": LR_MODEL['params_gscv'],
+                "params_rscv": LR_MODEL['params_rscv']
             },
             "Random Forest": {
                 "model": RandomForestClassifier(random_state=RANDOM_STATE),
-                "params": RF_PARAMS
+                "params_gscv": RF_MODEL['params_gscv'],
+                "params_rscv": RF_MODEL['params_rscv']
             },
             "XGBoost": {
                 "model": XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE),
-                "params": XG_PARAMS
+                "params_gscv": XG_MODEL['params_gscv'],
+                "params_rscv": XG_MODEL['params_rscv']
             },
             "LightGBM": {  
                 "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
-                "params": LGBM_PARAMS
+                "params_gscv": LGBM_MODEL['params_gscv'],
+                "params_rscv": LGBM_MODEL['params_rscv']
             }
         }
 
     # Step 5: Train the models
     trained_models = train_models(
-        X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test,
         models=models, 
-        n_jobs=N_JOBS, cv_folds=CV_FOLDS, scoring_metric=SCORING_METRIC,
+        X_train=X_train, y_train=y_train,
+        use_randomized_cv=USE_RANDOMIZED_CV,
+        n_jobs=N_JOBS, cv_folds=CV_FOLDS, scoring_metric=SCORING_METRIC, random_state=RANDOM_STATE
     )
 
     # Step 6: Evaluate the models
@@ -117,11 +125,14 @@ def main():
         X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test
     )
 
+    # Step 7: Log training
+    log_training(trained_models)
+
     # Print a summary table of training times and model sizes
     print("\nPipeline Summary Table:")
     table_data = [
         [model_name, f"{model_size_kb:.2f}", f"{training_time:.2f}", f"{evaluation_time:.2f}"]
-        for model_name, best_model, training_time, model_size_kb, evaluation_time in trained_models
+        for model_name, best_model, training_time, model_size_kb, formatted_metrics, evaluation_time in trained_models
     ]
     headers = ["Model Name", "Model Size (KB)", "Training Time (s)", "Evaluation Time (s)"]
     print(tabulate(table_data, headers=headers, tablefmt="grid"))
@@ -130,6 +141,49 @@ def main():
     end_time = time.time() 
     elapsed_time = end_time - start_time
     print(f"\n✅ Completed in {elapsed_time:.2f} seconds.")
+
+
+def log_training(trained_models):
+    """
+    Logs training details into a file in the archives folder, appending new content at the top of the file.
+    """
+    archives_dir = "archives"
+    log_file_path = os.path.join(archives_dir, "training_logs.txt")
+    
+    # Ensure the archives directory exists
+    os.makedirs(archives_dir, exist_ok=True)
+
+    # Prepare the new content to prepend
+    new_content = ""
+    for model_name, best_model, training_time, model_size_kb, formatted_metrics, evaluation_time in trained_models:
+        new_content += "=" * 135 + "\n"
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Format: YYYY-MM-DD HH:MM:SS
+        new_content += "🕛 " + current_time + "\n"
+        metrics_table = tabulate(
+            pd.DataFrame([formatted_metrics]).to_dict(orient='records'),
+            headers="keys",
+            tablefmt="grid",
+            floatfmt=".2f"
+        )
+        new_content += metrics_table + "\n"
+        new_content += f"└──── Model Size: {model_size_kb:.2f} KB\n"
+        new_content += f"└──── Training Time: {training_time:.2f} seconds\n"
+        new_content += f"└──── Evaluation Time: {evaluation_time:.2f} seconds\n"
+        new_content += f"└──── Best Parameters: {best_model.get_params()}\n\n"
+
+    # Read the existing content of the file (if it exists)
+    if os.path.exists(log_file_path):
+        with open(log_file_path, "r", encoding="utf-8") as f:
+            existing_content = f.read()
+    else:
+        existing_content = ""
+
+    # Write the new content followed by the existing content
+    with open(log_file_path, "w", encoding="utf-8") as f:
+        f.write(new_content + existing_content)
+
+    print(f"💾 Saved training logs to archives folder!")
+
 
 if __name__ == "__main__":
     main()
