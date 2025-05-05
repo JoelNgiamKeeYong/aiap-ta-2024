@@ -1,5 +1,51 @@
 #!/bin/bash
 
+# Function to display usage instructions
+usage() {
+    echo "Usage: bash run.sh [--lite] [--model lr] [--model rf] [--model xgb] [--model lgbm]"
+    echo "       --lite  : Run the pipeline in lite mode (for quick debugging)."
+    echo "       --model : Specify which model(s) to run (lr, rf, xgb, lgbm). If no models are specified, all models will be run."
+    exit 1
+}
+
+# Parse arguments
+LITE_MODE=false
+MODELS=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --lite)
+            LITE_MODE=true
+            shift
+            ;;
+        --model)
+            if [[ -z "$2" ]]; then
+                echo "❌ Error: Missing model name after '--model'."
+                usage
+            fi
+            case "$2" in
+                lr|rf|xgb|lgbm)
+                    MODELS+=("$2")
+                    shift 2
+                    ;;
+                *)
+                    echo "❌ Error: Invalid model name '$2'. Valid options are 'lr', 'rf', 'xgb', 'lgbm'."
+                    usage
+                    ;;
+            esac
+            ;;
+        *)
+            echo "❌ Error: Unknown argument '$1'."
+            usage
+            ;;
+    esac
+done
+
+# Default behavior if no models are specified
+if [[ ${#MODELS[@]} -eq 0 && $LITE_MODE == false ]]; then
+    MODELS=("lr" "rf" "xgb" "lgbm")
+fi
+
 # Path to the configuration file
 CONFIG_FILE="config.yaml"
 
@@ -53,20 +99,16 @@ if [ ! -f "$SAVE_PATH" ]; then
     fi
 fi
 
-# Parse optional arguments
-if [[ "$1" == "--lite" ]]; then
-    echo "🚀🚀💡 Running pipeline in in Lite Mode... (<1 min)"
-    echo
+# Convert MODELS array to a space-separated string
+MODEL_ARGS=$(IFS=" "; echo "${MODELS[*]}")
+
+# Run the pipeline
+if $LITE_MODE; then
+    echo "🚀🚀💡 Running pipeline in Lite Mode... (<1 min)"
     python src/pipeline.py --lite
-elif [[ $# -gt 0 ]]; then
-    # Unknown argument
-    echo "❌ Unknown argument: $1"
-    exit 1
 else
-    # Run the full machine learning pipeline with configurable parameters
     echo "🚀🚀🚀 Running the machine learning pipeline... (~5 min)"
-    echo
-    python src/pipeline.py 
+    python src/pipeline.py --model $MODEL_ARGS
 fi
 
 # Check if the pipeline executed successfully

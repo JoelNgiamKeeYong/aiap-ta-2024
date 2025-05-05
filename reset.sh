@@ -12,7 +12,7 @@ for DIR in "${DIRECTORIES[@]}"; do
         echo "   └── Deleting '$DIR' folder..."
         rm -rf "$DIR"
     else
-        echo "   ⚠️  '$DIR' folder does not exist. Skipping deletion."
+        echo "   └── '$DIR' folder does not exist. Skipping deletion."
     fi
 done
 

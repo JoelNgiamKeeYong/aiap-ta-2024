@@ -47,7 +47,6 @@ The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory
 ├── config.yaml            # Configuration file for the ML pipeline
 ├── eda.ipynb              # Exploratory Data Analysis (EDA) notebook
 ├── README.md              # This file
-├── READ_ABOUT_ME.md       # Additional documentation
 ├── requirements.txt       # Dependencies for the project
 └── reset.sh               # Bash script to reset the project
 └── run.sh                 # Bash script to execute the entire ML pipeline
@@ -66,8 +65,9 @@ The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory
 3. Run the ML pipeline by executing either of the following bash scripts
 
    ```bash
-   bash run.sh            # Run the full ML pipeline
-   bash run.sh --lite     # Run the pipeline in lite mode, for quick debugging of the pipeline
+   bash run.sh              # Run the full ML pipeline with all models.
+   bash run.sh --lite       # Run the pipeline in lite mode, for quick debugging.
+   bash run.sh --model lr   # Run a single model only (e.g. Logistic Regression). Options: [lr, rf, xgb, lgbm].
    ```
 
 4. Experiment with the ML pipeline by modifying the `config.yaml` and `/src` files, then review the training logs in the `/archives` folder

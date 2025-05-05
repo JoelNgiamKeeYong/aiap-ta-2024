@@ -29,6 +29,8 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run the ML prediction pipeline")
     parser.add_argument("--lite", action="store_true", help="Run the pipeline in lite mode: uses a simpler model.")
+    parser.add_argument("--model", nargs="+", choices=["lr", "rf", "xgb", "lgbm"], 
+        help="Specify which model(s) to run (lr, rf, xgb, lgbm). If no models are specified, all models will be run.")
     args = parser.parse_args()
 
     # Load configuration from YAML file
@@ -78,37 +80,31 @@ def main():
     compare_dataframes(df_original=df_cleaned, df_new=df_preprocessed, original_name_string="cleaned", new_name_string="preprocessed", show_verbose=False)
 
     # Step 4: Define the models and their respective hyperparameter grids
-    if args.lite:
-        models = {
-            "LightGBM": {  
-                "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
-                "params_gscv": LGBM_MODEL['params_gscv'],
-                "params_rscv": LGBM_MODEL['params_rscv']
-            }
+    all_models = {
+        "Logistic Regression": {
+            "model": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+            "params_gscv": LR_MODEL['params_gscv'],
+            "params_rscv": LR_MODEL['params_rscv']
+        },
+        "Random Forest": {
+            "model": RandomForestClassifier(random_state=RANDOM_STATE),
+            "params_gscv": RF_MODEL['params_gscv'],
+            "params_rscv": RF_MODEL['params_rscv']
+        },
+        "XGBoost": {
+            "model": XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE),
+            "params_gscv": XG_MODEL['params_gscv'],
+            "params_rscv": XG_MODEL['params_rscv']
+        },
+        "LightGBM": {  
+            "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
+            "params_gscv": LGBM_MODEL['params_gscv'],
+            "params_rscv": LGBM_MODEL['params_rscv']
         }
-    else:
-        models = {
-            "Logistic Regression": {
-                "model": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
-                "params_gscv": LR_MODEL['params_gscv'],
-                "params_rscv": LR_MODEL['params_rscv']
-            },
-            "Random Forest": {
-                "model": RandomForestClassifier(random_state=RANDOM_STATE),
-                "params_gscv": RF_MODEL['params_gscv'],
-                "params_rscv": RF_MODEL['params_rscv']
-            },
-            "XGBoost": {
-                "model": XGBClassifier(eval_metric='logloss', random_state=RANDOM_STATE),
-                "params_gscv": XG_MODEL['params_gscv'],
-                "params_rscv": XG_MODEL['params_rscv']
-            },
-            "LightGBM": {  
-                "model": LGBMClassifier(verbose=-1, force_row_wise=True, random_state=RANDOM_STATE),
-                "params_gscv": LGBM_MODEL['params_gscv'],
-                "params_rscv": LGBM_MODEL['params_rscv']
-            }
-        }
+    }
+
+    # Get the models to train based on arguments
+    models = get_models_to_train(args, all_models)
 
     # Step 5: Train the models
     trained_models = train_models(
@@ -141,6 +137,47 @@ def main():
     end_time = time.time() 
     elapsed_time = end_time - start_time
     print(f"\n✅ Completed in {elapsed_time:.2f} seconds.")
+
+
+def get_models_to_train(args, all_models):
+    """
+    Determines which models to train based on command-line arguments.
+    
+    Args:
+        args: Parsed command-line arguments.
+        all_models (dict): Dictionary of all available models and their configurations.
+    
+    Returns:
+        dict: A dictionary of selected models and their configurations.
+    """
+    # Mapping between shorthand names and full model names
+    model_mapping = {
+        "lr": "Logistic Regression",
+        "rf": "Random Forest",
+        "xgb": "XGBoost",
+        "lgbm": "LightGBM"
+    }
+
+    # Filter models based on arguments
+    if args.lite:
+        # Run only LightGBM in Lite Mode
+        print("🚀🚀💡 Running pipeline in Lite Mode... (<1 min)")
+        return {"LightGBM": all_models["LightGBM"]}
+
+    # Select models based on --model arguments, default to all models if none are specified
+    selected_models = args.model or ["lr", "rf", "xgb", "lgbm"]  # Default to all models if no --model is provided
+    models = {
+        model_mapping[shorthand]: all_models[model_mapping[shorthand]]
+        for shorthand in selected_models
+        if shorthand in model_mapping  # Ensure the shorthand is valid
+    }
+
+    # Handle invalid shorthand names
+    invalid_models = set(selected_models) - set(model_mapping.keys())
+    if invalid_models:
+        print(f"⚠️ Warning: Ignoring invalid model(s): {', '.join(invalid_models)}")
+
+    return models
 
 
 def log_training(trained_models):
