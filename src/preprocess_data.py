@@ -1,7 +1,8 @@
 # src/preprocess_data.py
 
-import datetime
+import os
 import time
+import datetime
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -34,6 +35,36 @@ def preprocess_data(
             - y_test (pd.Series): Testing target variable.
     """
     try:
+        # Define output paths
+        X_train_path = "./data/X_train.csv"
+        y_train_path = "./data/y_train.csv"
+        X_test_path = "./data/X_test.csv"
+        y_test_path = "./data/y_test.csv"
+        df_preprocessed_path = "./data/preprocessed_data.csv"
+
+        # Check if the preprocessed data files already exists
+        if (os.path.exists(X_train_path) and 
+            os.path.exists(y_train_path) and 
+            os.path.exists(X_test_path) and 
+            os.path.exists(y_test_path) and
+            os.path.exists(df_preprocessed_path)):
+            
+            print("\n✅ Found existing preprocessed data. Skipping preprocessing...")
+            
+            # Load the preprocessed splits
+            X_train = pd.read_csv(X_train_path)
+            y_train = pd.read_csv(y_train_path).squeeze()  # Convert to Series
+            X_test = pd.read_csv(X_test_path)
+            y_test = pd.read_csv(y_test_path).squeeze()    # Convert to Series
+            df_preprocessed = pd.read_csv(df_preprocessed_path)
+            
+            # Extract feature names from X_train (columns of the feature matrix)
+            feature_names = X_train.columns.tolist()
+            
+            # Return the loaded splits and feature names
+            return X_train, X_test, y_train, y_test, df_preprocessed, feature_names
+
+        # Carry out preprocessing id preprocessed data files do not exist
         print("\n🔧 Preprocessing the dataset...")
         start_time = time.time()
 
@@ -143,16 +174,24 @@ def preprocess_data(
         y_combined = pd.concat([y_train, y_test], axis=0).reset_index(drop=True)
         df_preprocessed = pd.concat([X_combined, y_combined], axis=1)
 
-        # Save the preprocessed data to a CSV file
+        # Save the preprocessed data to CSV files
         if save_data:
-            output_path = "./data/preprocessed_data.csv"
-            print(f"\n💾 Saving preprocessed data to {output_path}...")
-            df_preprocessed.to_csv(output_path, index=False)
+            print("\n💾 Saving preprocessed data to /data folder...")
+            # Save consoldiated preprocessed file
+            df_preprocessed.to_csv(df_preprocessed_path, index=False)
+            # Save each split to its respective file
+            # Crucial as the above df_preprocessed cannot be reverse-engineered with the same spit as during EDA
+            # As we concat the train and test subsets together, not from their original indexes in the raw file
+            X_train.to_csv(X_train_path, index=False)
+            X_test.to_csv(X_test_path, index=False)
+            y_train.to_csv(y_train_path, index=False)
+            y_test.to_csv(y_test_path, index=False)
 
         end_time = time.time() 
         elapsed_time = end_time - start_time
         print(f"\n✅ Data preprocessing completed in {elapsed_time:.2f} seconds!")
 
+        # Return data
         return X_train, X_test, y_train, y_test, df_preprocessed, feature_names
 
     except Exception as e:

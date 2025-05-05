@@ -105,9 +105,11 @@ MODEL_ARGS=$(IFS=" "; echo "${MODELS[*]}")
 # Run the pipeline
 if $LITE_MODE; then
     echo "🚀🚀💡 Running pipeline in Lite Mode... (<1 min)"
+    echo
     python src/pipeline.py --lite
 else
     echo "🚀🚀🚀 Running the machine learning pipeline... (~5 min)"
+    echo
     python src/pipeline.py --model $MODEL_ARGS
 fi
 

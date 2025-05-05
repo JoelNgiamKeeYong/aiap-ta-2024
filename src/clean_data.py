@@ -1,5 +1,6 @@
 # src/clean_data.py
 
+import os
 import time
 import pandas as pd
 
@@ -26,6 +27,15 @@ def clean_data(
         RuntimeError: If an error occurs during the cleaning process.
     """
     try:
+        # Define output path
+        output_path = "./data/cleaned_data.csv"
+
+        # Check if the cleaned data file already exists
+        if os.path.exists(output_path):
+            print(f"\n✅ Found existing cleaned data. Skipping cleaning process...")
+            return pd.read_csv(output_path)
+
+        # Carry out cleaning id cleaned data file does not exist
         print("\n🧼 Cleaning the dataset...")
         start_time = time.time()
 

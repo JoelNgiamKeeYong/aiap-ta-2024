@@ -161,7 +161,6 @@ def get_models_to_train(args, all_models):
     # Filter models based on arguments
     if args.lite:
         # Run only LightGBM in Lite Mode
-        print("🚀🚀💡 Running pipeline in Lite Mode... (<1 min)")
         return {"LightGBM": all_models["LightGBM"]}
 
     # Select models based on --model arguments, default to all models if none are specified

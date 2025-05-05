@@ -54,7 +54,7 @@ The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory
 
 ## 📋 Execution Instructions
 
-1. Install dependencies
+1. Install dependencies:
 
    ```bash
    pip install -r requirements.txt
@@ -62,7 +62,7 @@ The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory
 
 2. [Optional] Manually download and place the dataset file into the `data/` folder. The following step does this automatically. Link for download: [https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db](https://techassessment.blob.core.windows.net/aiap-pys-2/noshow.db)
 
-3. Run the ML pipeline by executing either of the following bash scripts
+3. Run the ML pipeline by executing either of the following bash scripts:
 
    ```bash
    bash run.sh              # Run the full ML pipeline with all models.
@@ -70,9 +70,9 @@ The pipeline is designed to be **reusable**, **readable**, and **self-exlanatory
    bash run.sh --model lr   # Run a single model only (e.g. Logistic Regression). Options: [lr, rf, xgb, lgbm].
    ```
 
-4. Experiment with the ML pipeline by modifying the `config.yaml` and `/src` files, then review the training logs in the `/archives` folder
+4. Experiment with the ML pipeline by modifying the `config.yaml` and `/src` files, then review the training logs in the `/archives` folder.
 
-5. [Optional] Reset the project
+5. [Optional] Reset the project:
 
    ```bash
    bash reset.sh
@@ -155,14 +155,12 @@ The machine learning pipeline is designed to be **modular**, **interpretable**, 
 ### 3. 🔧 Data Preprocessing:
 
 - Split the data early using a stratified train-test split to preserve the class distribution of the target variable, ensuring both sets are representative of the imbalanced dataset.
-- Use an 80%-20% split to allocate sufficient data for training and evaluation while maintaining robustness.
-- A 20% test split strikes a balance between having sufficient data for training and evaluating model performance on unseen data.
+- Use an 80%-20% split to allocate sufficient data for training and evaluation while maintaining robustness. A 20% test split strikes a balance between having sufficient data for training and evaluating model performance on unseen data.
 - Perform advanced cleaning steps, including imputing missing values, removing outliers, and addressing inconsistencies based on insights from the training set only during EDA.
 - Conduct feature engineering to create new, meaningful features and transform existing ones, enhancing interpretability and predictive power (e.g., deriving domain-specific synthetic features).
 - Normalize numerical features using standard scaling to improve performance for gradient-based models and ensure consistent feature ranges.
 - Encode categorical variables using techniques like One-Hot Encoding to ensure compatibility with machine learning algorithms.
-- Perform feature selectiong using various techniques and remove features with excessive noise, irrelevance, or low variance to improve model efficiency and performance.
-- Separating preprocessing and training enhances transparency and simplifies debugging, as each step can be independently validated. Using separate functions allows greater flexibility in modifying individual components (e.g., swapping scalers or encoders) without affecting the entire pipeline. This approach ensures reproducibility and consistency across different stages of the project.
+- During EDA, use various feature selection techniques (e.g., variance threshold, correlation analysis) to identify features with excessive noise, irrelevance, or low variance. Instead of incorporating these feature selection techniques directly into the pipeline, manually remove the shortlisted features within the pipeline. This approach ensures stability, consistent interpretability, and the ability to apply domain knowledge, while avoiding the risks of inconsistent feature sets and model destabilization that can arise from automated feature selection during pipeline execution.
 
 ### 4. 🤖 Model Training:
 
@@ -178,6 +176,13 @@ The machine learning pipeline is designed to be **modular**, **interpretable**, 
 - Evaluate model performance using a combination of metrics and visualizations to ensure a comprehensive understanding of strengths and weaknesses.
 - Use cross-validation during training to enhance robustness and minimize overfitting.
 - Save evaluation results and visualizations to a dedicated output directory for easy review and comparison.
+
+### └── Optimization Note:
+
+- To optimize computational efficiency, the pipeline will bypass the data cleaning and preprocessing steps if the cleaned dataset (`cleaned_data.csv`) and preprocessed datasets (`X_train.csv`, `y_train.csv`, `X_test.csv`, `y_test.csv` and `preprocessed_data.csv`) already exists.
+- This approach eliminates redundant processing when there are no changes to the raw dataset or the cleaning/preprocessing logic, conserving time and computational resources.
+- If any modifications are made to the data cleaning or preprocessing steps, ensure you reset the project and rerun the pipeline to regenerate the datasets.
+- This guarantees consistency across runs and prevents the use of outdated or mismatched data in subsequent stages of the pipeline.
 
 ## 🛠️ Feature Processing
 
@@ -357,6 +362,12 @@ Balancing Precision and Recall : While high recall is desirable, excessively low
 - Reset the project by re-running the initialization script provided.
 - Verify that all dependencies are installed and compatible with the versions specified in the `requirements.txt` file.
 - Review logs or error messages for debugging insights. Ensure that dataset paths and configurations are correctly set in the `config.yaml` file.
+
+### ❓ Why did we not include the preprocessing and model training into a single Pipeline?
+
+- Separating preprocessing and training enhances transparency and simplifies debugging, as each step can be independently validated.
+- Using separate functions allows greater flexibility in modifying individual components (e.g., swapping scalers or encoders) without affecting the entire pipeline.
+- This approach ensures reproducibility and consistency across different stages of the project.
 
 ### ❓ Why were oversampling and undersampling techniques not applied?
 
