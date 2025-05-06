@@ -13,25 +13,42 @@ def train_models(
     n_jobs, cv_folds, scoring_metric, random_state
 ):
     """
-    Preprocess the cleaned dataset and train multiple machine learning models.
+    Trains multiple machine learning models with hyperparameter tuning and evaluates their performance.
+
+    This function automates the training of multiple machine learning models using either Grid Search Cross-Validation (GridSearchCV) or Randomized Search Cross-Validation (RandomizedSearchCV) for hyperparameter tuning. It ensures reproducibility by utilizing a fixed random seed and parallelizes the computation using the specified number of jobs. The trained models are saved to disk, and their details (e.g., training time, model size) are recorded for further analysis.
 
     Parameters:
-        df_cleaned (pd.DataFrame): The cleaned dataset.
-        target (str): The name of the target variable.
-        models (dict): Dictionary of models and their hyperparameter grids.
-        n_jobs (int): Number of parallel jobs for GridSearchCV.
-        cv_folds (int): Number of cross-validation folds.
-        scoring_metric (str): Scoring metric for GridSearchCV.
-        test_size (float): Proportion of the dataset to include in the test split.
-        random_state (int): Random seed for reproducibility.
+        models (dict): 
+            A dictionary where each key is the name of a model, and the value is another dictionary containing:
+            - "model": The instantiated machine learning model.
+            - "params_gscv": Hyperparameter grid for GridSearchCV.
+            - "params_rscv": Hyperparameter distributions for RandomizedSearchCV.
+        X_train (pd.DataFrame or np.ndarray): 
+            The training feature matrix.
+        y_train (pd.Series or np.ndarray): 
+            The training target variable.
+        use_randomized_cv (bool): 
+            Whether to use RandomizedSearchCV (True) or GridSearchCV (False) for hyperparameter tuning.
+        n_jobs (int): 
+            Number of parallel jobs to run during cross-validation. Use -1 to utilize all available CPU cores.
+        cv_folds (int): 
+            Number of cross-validation folds for hyperparameter tuning.
+        scoring_metric (str): 
+            The scoring metric to optimize during hyperparameter tuning (e.g., "accuracy", "f1", "roc_auc").
+        random_state (int): 
+            Random seed for reproducibility, used in RandomizedSearchCV and other stochastic processes.
 
     Returns:
-        tuple: A tuple containing:
-            - trained_models (list): List of tuples containing model name, best model, training time, and space required.
-            - X_train (pd.DataFrame): Transformed training feature matrix.
-            - X_test (pd.DataFrame): Transformed testing feature matrix.
-            - y_train (pd.Series): Training target variable.
-            - y_test (pd.Series): Testing target variable.
+        list: 
+            A list of tuples, where each tuple contains:
+            - model_name (str): The name of the trained model.
+            - best_model (object): The best estimator after hyperparameter tuning.
+            - training_time (float): Time taken to train the model (in seconds).
+            - model_size_kb (float): Size of the saved model file (in KB).
+
+    Raises:
+        RuntimeError: 
+            If an error occurs during model training, a RuntimeError is raised with details about the failure.
     """
     try:
         print("\n🤖 Training the candidate models...")
@@ -105,7 +122,12 @@ def train_models(
         print(f"❌ An error occurred during model training: {e}")
         raise RuntimeError("Model training process failed.") from e
     
+#################################################################################################################################
+#################################################################################################################################
+# HELPER FUNCTIONS
 
+#################################################################################################################################
+#################################################################################################################################
 def parse_hyperparameters(params):
     """
     Parse hyperparameters from YAML configuration into a format suitable for RandomizedSearchCV.

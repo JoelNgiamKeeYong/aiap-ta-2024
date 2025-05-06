@@ -7,31 +7,18 @@ import seaborn as sns
 import statsmodels.api as sm
 from scipy.stats import zscore
 
-def perform_univariate_analysis(
-    df, 
-    column_name, 
-    show_graphs=True, 
-    show_distribution=True,
-    bins=30
-):
+def perform_univariate_analysis(df, column_name, show_graphs=True, show_distribution=True,bins=30):
     """
-    Perform comprehensive analysis on a specific column in the DataFrame.
+    Perform comprehensive univariate analysis on a specific column in the DataFrame.
 
-    Non-Graphical Analysis:
-    - Data type and number of unique values.
-    - For categorical columns: unique categories, value counts, and proportions.
-    - For numerical columns: summary statistics, skewness, and kurtosis.
-    - Missing values (optional).
-
-    Graphical Analysis (optional):
-    - Categorical columns: countplot, pie chart (with "Others" for low-frequency categories).
-    - Numerical columns: histogram with KDE, boxplot, violin plot, and QQ plot.
+    This function provides both non-graphical and graphical insights into the distribution and characteristics of a single column. It supports categorical and numerical columns, offering descriptive statistics, missing value analysis, and visualizations (if enabled).
 
     Parameters:
-        df (pd.DataFrame): The input DataFrame.
-        column_name (str): The name of the column to analyze.
-        show_graphs (bool): Whether to display graphical analysis. Default is True.
-        bins (int): Number of bins for the histogram (default: 30).
+        df (pd.DataFrame): The input DataFrame containing the data to analyze.
+        column_name (str): The name of the column to analyze. Must exist in the DataFrame.
+        show_graphs (bool, optional): Whether to display graphical visualizations. Defaults to True.
+        show_distribution (bool, optional): Whether to include distribution-related statistics and plots for numerical columns. Defaults to True.
+        bins (int, optional): Number of bins for the histogram (applies to numerical columns). Defaults to 30.
 
     Returns:
         None: Results are printed and displayed interactively.

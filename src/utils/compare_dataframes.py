@@ -2,14 +2,28 @@
 
 def compare_dataframes(df_original, df_new, original_name_string="original", new_name_string="new", show_verbose=True):
     """
-    Compare two DataFrames to determine the number of rows/columns dropped/added and changes in data size.
+    Compare two DataFrames to identify changes in rows, columns, and memory usage.
+
+    This function compares an original DataFrame with a cleaned or transformed version to determine:
+    - The number of rows and columns added or removed.
+    - Changes in memory usage (size increase or reduction).
+    - Specific columns that were dropped or added (optional verbose output).
 
     Parameters:
-        df_original (pd.DataFrame): The original DataFrame.
-        df_new (pd.DataFrame): The cleaned DataFrame.
+        df_original (pd.DataFrame): 
+            The original DataFrame before any transformations.
+        df_new (pd.DataFrame): 
+            The transformed or cleaned DataFrame to compare against the original.
+        original_name_string (str, optional): 
+            A label for the original DataFrame (e.g., "original"). Defaults to "original".
+        new_name_string (str, optional): 
+            A label for the new DataFrame (e.g., "cleaned"). Defaults to "new".
+        show_verbose (bool, optional): 
+            Whether to display detailed information about dropped/added columns. Defaults to True.
 
     Returns:
-        None
+        None: 
+            Prints a summary of changes between the two DataFrames.
     """
     # Step 1: Compare Row Counts
     rows_before = df_original.shape[0]

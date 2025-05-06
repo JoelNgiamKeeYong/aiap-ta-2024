@@ -59,22 +59,15 @@ def main():
     matplotlib.use('Agg')  # Non-interactive backend for plotting
 
     # Step 1: Load the dataset
-    df = load_data(db_path=DB_PATH, db_table_name=DB_TABLE_NAME)  
+    df = load_data(db_path=DB_PATH, db_table_name=DB_TABLE_NAME)
 
     # Step 2: Clean the dataset
-    irrelevant_features = ['booking_id']
-    df_cleaned = clean_data(
-        df=df, 
-        save_data=True,
-        remove_irrelevant_features=True, irrelevant_features=irrelevant_features,
-        columns_to_clean=[col for col in df.columns if col not in irrelevant_features]
-    )
+    df_cleaned = clean_data(df)
     compare_dataframes(df_original=df, df_new=df_cleaned, original_name_string="raw", new_name_string="cleaned")
 
     # Step 3: Preprocess the data
     X_train, X_test, y_train, y_test, df_preprocessed, feature_names = preprocess_data(
         df_cleaned=df_cleaned,
-        save_data=True,
         target=TARGET, test_size=TEST_SIZE, random_state=RANDOM_STATE
     )
     compare_dataframes(df_original=df_cleaned, df_new=df_preprocessed, original_name_string="cleaned", new_name_string="preprocessed", show_verbose=False)

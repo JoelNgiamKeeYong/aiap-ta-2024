@@ -27,15 +27,29 @@ def evaluate_models(trained_models, feature_names, X_train, X_test, y_train, y_t
     """
     Evaluate a list of trained models and save evaluation results.
 
+    This function evaluates each trained model by computing various metrics, generating visualizations, and saving the results to the specified output directory. It ensures reproducibility and provides detailed insights into model performance, including general metrics, ROC/PR curves, feature importance, confusion matrices, learning curves, and calibration curves.
+
     Args:
-        trained_models (list): List of trained models to evaluate.
-        X_train (pd.DataFrame or np.ndarray): Training feature matrix.
-        X_test (pd.DataFrame or np.ndarray): Testing feature matrix.
-        y_train (pd.Series or np.ndarray): Training target variable.
-        y_test (pd.Series or np.ndarray): Testing target variable.
+        trained_models (list): 
+            List of tuples containing trained models to evaluate. Each tuple includes:
+            - model_name (str): Name of the model.
+            - best_model (object): The trained model after hyperparameter tuning.
+            - training_time (float): Time taken to train the model (in seconds).
+            - model_size_kb (float): Size of the saved model file (in KB).
+        feature_names (list): 
+            List of feature names (optional, for sparse matrices or feature importance analysis).
+        X_train (pd.DataFrame or np.ndarray): 
+            Training feature matrix.
+        X_test (pd.DataFrame or np.ndarray): 
+            Testing feature matrix.
+        y_train (pd.Series or np.ndarray): 
+            Training target variable.
+        y_test (pd.Series or np.ndarray): 
+            Testing target variable.
 
     Returns:
-        dict: Dictionary containing consolidated evaluation results.
+        list: 
+            Updated list of trained models with evaluation metrics and evaluation time appended to each tuple.
     """
     print(f"\n📊 Evaluating best models...")
 
@@ -92,7 +106,12 @@ def evaluate_models(trained_models, feature_names, X_train, X_test, y_train, y_t
 
     return trained_models
 
+#################################################################################################################################
+#################################################################################################################################
+# HELPER FUNCTIONS
 
+#################################################################################################################################
+#################################################################################################################################
 def calculate_metrics(model, X, y_true):
     """Calculate basic classification metrics."""
     y_pred = model.predict(X)
@@ -103,7 +122,8 @@ def calculate_metrics(model, X, y_true):
         "F1-Score": f1_score(y_true, y_pred),
     }
 
-
+#################################################################################################################################
+#################################################################################################################################
 def process_probability_metrics(model_name, model, X_test, y_test, roc_data, pr_data):
     """Process probability-based metrics and curves."""
     roc_auc = None
@@ -128,7 +148,8 @@ def process_probability_metrics(model_name, model, X_test, y_test, roc_data, pr_
     
     return roc_auc, pr_auc
 
-
+#################################################################################################################################
+#################################################################################################################################
 def process_feature_importance(model_name, best_model, X_train, y_train, feature_names, output_dir):
     """Extract and save feature importance scores."""
     try:
@@ -166,7 +187,8 @@ def process_feature_importance(model_name, best_model, X_train, y_train, feature
     except Exception as e:
         print(f"      └── ⚠️  Could not compute or save feature importance for {model_name}: {str(e)}")
 
-
+#################################################################################################################################
+#################################################################################################################################
 def generate_confusion_matrix(model_name, model, X_test, y_test, output_dir):
     """Generate and save confusion matrix visualization."""
     try:
@@ -191,7 +213,8 @@ def generate_confusion_matrix(model_name, model, X_test, y_test, output_dir):
     except Exception as e:
         print(f"      └── ⚠️ Error occurred while computing or saving confusion matrix for {model_name}: {str(e)}")
 
-
+#################################################################################################################################
+#################################################################################################################################
 def generate_learning_curves(model_name, model, X_train, y_train, output_dir):
     """Generate and save learning curves."""
     try:
@@ -232,7 +255,8 @@ def generate_learning_curves(model_name, model, X_train, y_train, output_dir):
     except Exception as e:
         print(f"      └── ⚠️ Error generating learning curves for {model_name}: {str(e)}")
 
-
+#################################################################################################################################
+#################################################################################################################################
 def generate_calibration_curve(model_name, model, X_test, y_test, output_dir):
     """Generate and save calibration curve."""
     try:
@@ -262,7 +286,8 @@ def generate_calibration_curve(model_name, model, X_test, y_test, output_dir):
     except Exception as e:
         print(f"      └── ⚠️ Error generating calibration curve for {model_name}: {str(e)}")
 
-
+#################################################################################################################################
+#################################################################################################################################
 def format_metrics(model_name, train_metrics, test_metrics, roc_auc, pr_auc):
     """Format metrics for reporting."""
     return {
@@ -275,7 +300,8 @@ def format_metrics(model_name, train_metrics, test_metrics, roc_auc, pr_auc):
         "PR AUC": f"{pr_auc:.2f}" if pr_auc is not None else "N/A",
     }
 
-
+#################################################################################################################################
+#################################################################################################################################
 def save_consolidated_metrics(results, output_dir):
     """Save consolidated evaluation metrics to file."""
     metrics_file_path = f"{output_dir}/evaluation_metrics_summary.txt"
@@ -290,7 +316,8 @@ def save_consolidated_metrics(results, output_dir):
         )
         f.write(metrics_table + "\n\n")
 
-
+#################################################################################################################################
+#################################################################################################################################
 def save_roc_curves(roc_data, output_dir):
     """Save combined ROC curves to file."""
     if not roc_data:
@@ -310,7 +337,8 @@ def save_roc_curves(roc_data, output_dir):
         plt.savefig(combined_roc_file_path, dpi=300, bbox_inches="tight")
         plt.close()
 
-
+#################################################################################################################################
+#################################################################################################################################
 def save_pr_curves(pr_data, output_dir):
     """Save combined Precision-Recall curves to file."""
     if not pr_data:
@@ -329,7 +357,8 @@ def save_pr_curves(pr_data, output_dir):
         plt.savefig(combined_pr_file_path, dpi=300, bbox_inches="tight")
         plt.close()
 
-
+#################################################################################################################################
+#################################################################################################################################
 def compute_metrics(model, X, y_true):
     """
     Compute evaluation metrics for a given model and dataset.

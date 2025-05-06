@@ -13,6 +13,8 @@ def perform_bivariate_analysis(df, col1, col2):
     """
     Perform bivariate analysis between two columns in a DataFrame.
 
+    This function analyzes the relationship between two columns in a DataFrame by determining their types (categorical or numerical) and applying appropriate statistical tests and visualizations. It provides insights into patterns, correlations, and associations between the two variables.
+
     Parameters:
         df (pd.DataFrame): The input DataFrame.
         col1 (str): The first column to analyze.

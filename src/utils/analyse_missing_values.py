@@ -7,6 +7,8 @@ def analyse_missing_values(df, column_name, exclude_columns=None):
     """
     Perform a comprehensive analysis of missing values in a specific column.
 
+    This function calculates the proportion of missing values in the specified column and analyzes patterns of missingness across other columns in the DataFrame. It supports both categorical and numerical columns, providing insights into how missingness correlates with other features. 
+
     Parameters:
         df (pd.DataFrame): The input DataFrame.
         column_name (str): The column to analyze for missing values.
